@@ -4,9 +4,12 @@ export class Character {
         this.y = y;
         this.targetX = x;
         this.targetY = y;
-        this.size = 48; // Sprite size (will be scaled from 16x16)
-        this.speed = 3;
+        this.size = 48;
+        this.speed = 2.5; // Reduced from 3
         this.angle = 0;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.friction = 0.85; // Add friction to stop quickly
 
         // Animation
         this.isMoving = false;
@@ -45,7 +48,7 @@ export class Character {
         const dy = this.targetY - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > 5) {
+        if (distance > 3) {
             this.isMoving = true;
 
             // Calculate angle and determine direction
@@ -64,17 +67,28 @@ export class Character {
                 this.direction = 3; // Right (row 3)
             }
 
-            // Move towards target
+            // Apply velocity towards target
             const moveX = (dx / distance) * this.speed;
             const moveY = (dy / distance) * this.speed;
 
-            this.x += moveX;
-            this.y += moveY;
+            this.velocityX = moveX;
+            this.velocityY = moveY;
+
+            // Move
+            this.x += this.velocityX;
+            this.y += this.velocityY;
 
             // Animate walk cycle
             this.walkCycle += this.animationSpeed;
             this.animationFrame = Math.floor(this.walkCycle) % this.framesPerDirection;
         } else {
+            // Apply friction when stopped
+            this.velocityX *= this.friction;
+            this.velocityY *= this.friction;
+
+            if (Math.abs(this.velocityX) < 0.1) this.velocityX = 0;
+            if (Math.abs(this.velocityY) < 0.1) this.velocityY = 0;
+
             this.isMoving = false;
             this.walkCycle = 0;
             this.animationFrame = 1; // Middle frame when idle

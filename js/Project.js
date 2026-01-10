@@ -57,7 +57,9 @@ export class Project {
     }
 
     render(ctx, camera) {
-        // Only render if on screen (accounting for zoom)
+        // Projects are rendered inside the world transform context
+        // So we use world coordinates directly
+        // Check if on screen using world coordinates
         const screenPos = camera.worldToScreen(this.x, this.y);
         if (screenPos.x < -this.size || screenPos.x > camera.width + this.size ||
             screenPos.y < -this.size || screenPos.y > camera.height + this.size) {
@@ -65,7 +67,7 @@ export class Project {
         }
 
         ctx.save();
-        ctx.translate(screenPos.x, screenPos.y);
+        ctx.translate(this.x, this.y);
         ctx.scale(this.hoverScale, this.hoverScale);
         ctx.imageSmoothingEnabled = false; // Pixel art style
 
@@ -152,7 +154,7 @@ export class Project {
         // Pixel art style nametag
         ctx.restore();
         ctx.save();
-        ctx.translate(screenPos.x, screenPos.y);
+        ctx.translate(this.x, this.y);
         ctx.imageSmoothingEnabled = false;
 
         // Calculate nametag dimensions

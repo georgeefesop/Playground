@@ -2,10 +2,7 @@
 
 ## Current Tasks
 
-- [x] Fix background rendering issue (top half white, bottom half space background)
-- [x] Fix character sliding/ice movement - stop immediately when target reached
-- [x] Spawn character between the two stars
-- [x] Remove show grid toggle from settings
+- [ ] Fix stars appearing off-screen - projects using wrong coordinate system
 
 ## Completed Tasks ✅
 

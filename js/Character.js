@@ -107,15 +107,26 @@ export class Character {
         ctx.save();
         ctx.translate(this.x, this.y);
 
+        // Get CSS custom property values
+        const getCSSVar = (varName, fallback) => {
+            return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+        };
+
         // Soft shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillStyle = getCSSVar('--color-character-shadow', 'rgba(0, 0, 0, 0.2)');
         ctx.beginPath();
         ctx.ellipse(0, this.size * 0.4, this.size * 0.4, this.size * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();
 
         // Hover glow effect
         if (this.isHovered) {
-            ctx.shadowColor = 'rgba(99, 102, 241, 0.5)';
+            const accentColor = getCSSVar('--color-accent-indigo', '#6366f1');
+            // Convert hex to rgba
+            const hex = accentColor.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.5)`;
             ctx.shadowBlur = 20;
         }
 
@@ -136,7 +147,7 @@ export class Character {
             );
         } else {
             // Fallback: simple circle while loading
-            ctx.fillStyle = '#6366f1';
+            ctx.fillStyle = getCSSVar('--color-accent-indigo', '#6366f1');
             ctx.beginPath();
             ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
             ctx.fill();

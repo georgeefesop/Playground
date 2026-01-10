@@ -1,3 +1,44 @@
+/* Color Palette - CSS Custom Properties */
+:root {
+    /* Primary Colors */
+    --color-black: #000000;
+    --color-white: #ffffff;
+    --color-dark-text: #1a1a1a;
+    
+    /* Grays */
+    --color-gray-100: #fafafa;
+    --color-gray-200: #f8f8f8;
+    --color-gray-300: #f0f0f0;
+    --color-gray-400: #e0e0e0;
+    --color-gray-500: #333333;
+    --color-gray-600: #666666;
+    --color-gray-700: #999999;
+    
+    /* Background Colors */
+    --color-space-bg: #0a0a0f;
+    
+    /* Project/Star Colors */
+    --color-star-alpha-base: #1a1f2e;
+    --color-star-alpha-glow: #ff4444;
+    --color-star-beta-base: #f5f5f5;
+    --color-star-beta-glow: #ff8844;
+    
+    /* Accent Colors */
+    --color-accent-indigo: #6366f1;
+    
+    /* Shadow & Overlay Colors */
+    --color-shadow-light: rgba(0, 0, 0, 0.1);
+    --color-shadow-medium: rgba(0, 0, 0, 0.15);
+    --color-shadow-dark: rgba(0, 0, 0, 0.2);
+    --color-shadow-darker: rgba(0, 0, 0, 0.3);
+    --color-overlay-light: rgba(0, 0, 0, 0.08);
+    --color-overlay-medium: rgba(0, 0, 0, 0.1);
+    --color-overlay-dark: rgba(0, 0, 0, 0.5);
+    --color-grid-line: rgba(0, 0, 0, 0.03);
+    --color-character-shadow: rgba(0, 0, 0, 0.2);
+    --color-project-shadow: rgba(0, 0, 0, 0.15);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -7,8 +48,8 @@
 body {
     font-family: 'Courier New', 'Consolas', monospace;
     overflow: hidden;
-    background: #fafafa;
-    color: #000;
+    background: var(--color-gray-100);
+    color: var(--color-black);
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: auto;
     image-rendering: pixelated;
@@ -48,14 +89,14 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
+    background: var(--color-white);
     padding: 1.5rem;
     border-radius: 0;
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 6px 6px 0 var(--color-shadow-dark);
     max-width: 400px;
     text-align: center;
     animation: pixelDialogIn 0.15s steps(3);
-    border: 3px solid #000;
+    border: 3px solid var(--color-black);
     image-rendering: crisp-edges;
 }
 
@@ -64,7 +105,7 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: #000;
+    color: var(--color-black);
     font-family: 'Courier New', 'Consolas', monospace;
     text-transform: uppercase;
 }
@@ -72,7 +113,7 @@ body {
 .tutorial-content p {
     margin-bottom: 1rem;
     line-height: 1.6;
-    color: #000;
+    color: var(--color-black);
     font-size: 0.875rem;
     font-family: 'Courier New', 'Consolas', monospace;
     font-weight: 500;
@@ -80,7 +121,7 @@ body {
 
 #controls-hint {
     font-weight: 700;
-    color: #000;
+    color: var(--color-black);
 }
 
 #start-btn {
@@ -88,9 +129,9 @@ body {
     padding: 0.75rem 2rem;
     font-size: 0.875rem;
     font-weight: 700;
-    background: #000;
-    color: white;
-    border: 2px solid #000;
+    background: var(--color-black);
+    color: var(--color-white);
+    border: 2px solid var(--color-black);
     border-radius: 0;
     cursor: pointer;
     transition: none;
@@ -101,8 +142,8 @@ body {
 }
 
 #start-btn:hover {
-    background: #333;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+    background: var(--color-gray-500);
+    box-shadow: 2px 2px 0 var(--color-shadow-darker);
 }
 
 #start-btn:active {
@@ -128,56 +169,56 @@ body {
 .arrow-key {
     width: 48px;
     height: 48px;
-    background: #f0f0f0;
-    border: 3px solid #000;
+    background: var(--color-gray-300);
+    border: 3px solid var(--color-black);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
     font-weight: 700;
-    color: #000;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+    color: var(--color-black);
+    box-shadow: 2px 2px 0 var(--color-shadow-dark);
     image-rendering: crisp-edges;
     font-family: 'Courier New', 'Consolas', monospace;
 }
 
 .arrow-key:hover {
-    background: #e0e0e0;
+    background: var(--color-gray-400);
 }
 
 .tutorial-hint {
     margin-top: 0.75rem;
     font-size: 0.75rem;
-    color: #666;
+    color: var(--color-gray-600);
     font-style: italic;
 }
 
 .tutorial-hint kbd {
-    background: #f0f0f0;
-    border: 2px solid #000;
+    background: var(--color-gray-300);
+    border: 2px solid var(--color-black);
     padding: 2px 6px;
     font-family: 'Courier New', 'Consolas', monospace;
     font-weight: 700;
     font-size: 0.75rem;
-    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 1px 1px 0 var(--color-shadow-dark);
     margin: 0 2px;
 }
 
 /* Thought Bubble - Pixel Art Style */
 #guide-comment {
     position: absolute;
-    background: white;
+    background: var(--color-white);
     padding: 0.75rem 1rem;
     border-radius: 4px;
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15);
+    box-shadow: 4px 4px 0 var(--color-shadow-medium);
     max-width: 280px;
     font-size: 0.875rem;
     line-height: 1.4;
     animation: pixelBubbleIn 0.15s steps(3);
     z-index: 100;
-    border: 3px solid #000;
+    border: 3px solid var(--color-black);
     font-weight: 500;
-    color: #1a1a1a;
+    color: var(--color-dark-text);
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -189,7 +230,7 @@ body {
     width: 0;
     height: 0;
     border: 6px solid transparent;
-    border-right-color: #000;
+    border-right-color: var(--color-black);
     bottom: 12px;
     left: -12px;
     top: auto;
@@ -202,7 +243,7 @@ body {
     width: 0;
     height: 0;
     border: 6px solid transparent;
-    border-right-color: white;
+    border-right-color: var(--color-white);
     bottom: 12px;
     left: -9px;
     top: auto;
@@ -213,14 +254,14 @@ body {
 #message-prompt {
     position: fixed;
     /* Positioned dynamically via JS */
-    background: white;
+    background: var(--color-white);
     padding: 1rem 1.25rem;
     border-radius: 0;
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 6px 6px 0 var(--color-shadow-dark);
     width: 280px;
     animation: pixelDialogIn 0.15s steps(3);
     z-index: 2000;
-    border: 3px solid #000;
+    border: 3px solid var(--color-black);
     image-rendering: crisp-edges;
 }
 
@@ -228,7 +269,7 @@ body {
     margin-bottom: 0.75rem;
     font-size: 0.875rem;
     font-weight: 700;
-    color: #000;
+    color: var(--color-black);
     font-family: 'Courier New', 'Consolas', monospace;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -237,7 +278,7 @@ body {
 .prompt-content input {
     width: 100%;
     padding: 0.625rem 0.75rem;
-    border: 2px solid #000;
+    border: 2px solid var(--color-black);
     border-radius: 0;
     font-size: 0.875rem;
     font-family: 'Courier New', 'Consolas', monospace;
@@ -245,12 +286,12 @@ body {
     outline: none;
     transition: none;
     margin-bottom: 0.75rem;
-    background: #f0f0f0;
+    background: var(--color-gray-300);
 }
 
 .prompt-content input:focus {
-    background: #fff;
-    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.1);
+    background: var(--color-white);
+    box-shadow: inset 2px 2px 0 var(--color-shadow-light);
 }
 
 .prompt-actions {
@@ -261,7 +302,7 @@ body {
 
 .prompt-actions button {
     padding: 0.5rem 1rem;
-    border: 2px solid #000;
+    border: 2px solid var(--color-black);
     border-radius: 0;
     font-size: 0.75rem;
     font-weight: 700;
@@ -273,13 +314,13 @@ body {
 }
 
 #message-send-btn {
-    background: #000;
-    color: white;
+    background: var(--color-black);
+    color: var(--color-white);
 }
 
 #message-send-btn:hover {
-    background: #333;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+    background: var(--color-gray-500);
+    box-shadow: 2px 2px 0 var(--color-shadow-darker);
 }
 
 #message-send-btn:active {
@@ -288,12 +329,12 @@ body {
 }
 
 #message-cancel-btn {
-    background: #f0f0f0;
-    color: #000;
+    background: var(--color-gray-300);
+    color: var(--color-black);
 }
 
 #message-cancel-btn:hover {
-    background: #e0e0e0;
+    background: var(--color-gray-400);
 }
 
 #message-cancel-btn:active {
@@ -398,16 +439,16 @@ body {
 #joystick-base {
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.08);
+    background: var(--color-overlay-light);
     border-radius: 50%;
     position: relative;
-    border: 2px solid rgba(0, 0, 0, 0.1);
+    border: 2px solid var(--color-overlay-medium);
 }
 
 #joystick-stick {
     width: 50%;
     height: 50%;
-    background: #000;
+    background: var(--color-black);
     border-radius: 50%;
     position: absolute;
     top: 50%;
@@ -418,8 +459,8 @@ body {
 
 /* Selection Styling */
 ::selection {
-    background: rgba(0, 0, 0, 0.1);
-    color: #000;
+    background: var(--color-overlay-medium);
+    color: var(--color-black);
 }
 
 /* Left Side Settings Panel */
@@ -428,10 +469,10 @@ body {
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    background: white;
+    background: var(--color-white);
     padding: 1rem;
-    border: 3px solid #000;
-    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+    border: 3px solid var(--color-black);
+    box-shadow: 6px 6px 0 var(--color-shadow-dark);
     z-index: 1000;
     min-width: 200px;
     max-width: 250px;
@@ -449,8 +490,8 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 1rem;
-    color: #000;
-    border-bottom: 2px solid #000;
+    color: var(--color-black);
+    border-bottom: 2px solid var(--color-black);
     padding-bottom: 0.5rem;
 }
 
@@ -464,7 +505,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 0.5rem;
-    color: #000;
+    color: var(--color-black);
 }
 
 .background-library {
@@ -475,8 +516,8 @@ body {
 
 .background-item {
     padding: 0.5rem;
-    border: 2px solid #000;
-    background: #f0f0f0;
+    border: 2px solid var(--color-black);
+    background: var(--color-gray-300);
     cursor: pointer;
     transition: none;
     font-family: 'Courier New', 'Consolas', monospace;
@@ -488,8 +529,8 @@ body {
 .background-preview {
     width: 100%;
     height: 64px;
-    border: 2px solid #000;
-    background: #fff;
+    border: 2px solid var(--color-black);
+    background: var(--color-white);
     overflow: hidden;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
@@ -539,7 +580,7 @@ body {
     font-size: 0.75rem;
     font-weight: 500;
     margin-bottom: 0.25rem;
-    color: #000;
+    color: var(--color-black);
 }
 
 .settings-option input[type="range"] {
@@ -547,8 +588,8 @@ body {
     -webkit-appearance: none;
     appearance: none;
     height: 4px;
-    background: #e0e0e0;
-    border: 2px solid #000;
+    background: var(--color-gray-400);
+    border: 2px solid var(--color-black);
     outline: none;
 }
 
@@ -557,17 +598,17 @@ body {
     appearance: none;
     width: 16px;
     height: 16px;
-    background: #000;
+    background: var(--color-black);
     cursor: pointer;
-    border: 2px solid #000;
+    border: 2px solid var(--color-black);
 }
 
 .settings-option input[type="range"]::-moz-range-thumb {
     width: 16px;
     height: 16px;
-    background: #000;
+    background: var(--color-black);
     cursor: pointer;
-    border: 2px solid #000;
+    border: 2px solid var(--color-black);
 }
 
 .settings-toggle {
@@ -580,7 +621,7 @@ body {
     width: 20px;
     height: 20px;
     cursor: pointer;
-    accent-color: #000;
+    accent-color: var(--color-black);
 }
 
 #settings-toggle-btn {
@@ -588,9 +629,9 @@ body {
     left: 1rem;
     top: 1rem;
     padding: 0.5rem 0.75rem;
-    background: #000;
-    color: white;
-    border: 2px solid #000;
+    background: var(--color-black);
+    color: var(--color-white);
+    border: 2px solid var(--color-black);
     border-radius: 0;
     cursor: pointer;
     font-size: 0.75rem;
@@ -603,8 +644,8 @@ body {
 }
 
 #settings-toggle-btn:hover {
-    background: #333;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+    background: var(--color-gray-500);
+    box-shadow: 2px 2px 0 var(--color-shadow-darker);
 }
 
 #settings-toggle-btn:active {

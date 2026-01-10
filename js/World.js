@@ -25,9 +25,14 @@ export class World {
     }
 
     drawBackground(camera) {
+        // Get CSS custom property values
+        const getCSSVar = (varName) => {
+            return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+        };
+
         if (this.currentBackground === 'grid') {
             // Grid background (default light)
-            this.ctx.fillStyle = '#f8f8f8';
+            this.ctx.fillStyle = getCSSVar('--color-gray-200') || '#f8f8f8';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else if (this.currentBackground === 'space') {
             // Space background - draw in screen space
@@ -37,7 +42,7 @@ export class World {
                     this.backgroundImage.src = 'assets/space.png';
                 }
                 // Fallback while loading
-                this.ctx.fillStyle = '#0a0a0f';
+                this.ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             } else {
                 // Create pattern and fill entire screen
@@ -48,13 +53,13 @@ export class World {
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 } else {
                     // Fallback
-                    this.ctx.fillStyle = '#0a0a0f';
+                    this.ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
                     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 }
             }
         } else {
             // Default fallback
-            this.ctx.fillStyle = '#0a0a0f';
+            this.ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         }
     }
@@ -109,7 +114,9 @@ export class World {
         const endX = camera.x + this.canvas.width;
         const endY = camera.y + this.canvas.height;
 
-        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
+        // Get CSS custom property for grid color
+        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--color-grid-line').trim() || 'rgba(0, 0, 0, 0.03)';
+        this.ctx.strokeStyle = gridColor;
         this.ctx.lineWidth = 1;
 
         // Vertical lines

@@ -74,6 +74,11 @@ export class Project {
         // Subtle pulse animation
         const pulse = Math.sin(Date.now() * 0.001 + this.pulseOffset) * 0.05 + 1;
 
+        // Get CSS custom property values
+        const getCSSVar = (varName, fallback) => {
+            return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+        };
+
         // Get current color based on proximity
         const currentColor = this.getCurrentColor();
         const colorRgb = this.hexToRgb(currentColor);
@@ -100,7 +105,7 @@ export class Project {
         }
 
         // Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.fillStyle = getCSSVar('--color-project-shadow', 'rgba(0, 0, 0, 0.15)');
         ctx.beginPath();
         ctx.arc(2, 2, this.size * 0.5 * pulse, 0, Math.PI * 2);
         ctx.fill();
@@ -168,19 +173,19 @@ export class Project {
         const tagY = this.size * 0.5 + 20;
 
         // Draw nametag background
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = getCSSVar('--color-black', '#000');
         ctx.fillRect(-tagWidth / 2 - 1, tagY - 1, tagWidth + 2, tagHeight + 2);
         
-        ctx.fillStyle = '#fff';
+        ctx.fillStyle = getCSSVar('--color-white', '#fff');
         ctx.fillRect(-tagWidth / 2, tagY, tagWidth, tagHeight);
 
         // Draw nametag border (pixel style)
-        ctx.strokeStyle = '#000';
+        ctx.strokeStyle = getCSSVar('--color-black', '#000');
         ctx.lineWidth = 2;
         ctx.strokeRect(-tagWidth / 2, tagY, tagWidth, tagHeight);
 
         // Draw text
-        ctx.fillStyle = '#000';
+        ctx.fillStyle = getCSSVar('--color-black', '#000');
         ctx.font = 'bold 14px "Courier New", "Consolas", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -214,16 +219,20 @@ export class Project {
     showModal(content) {
         // Create a modal to display project content - Pixel style
         const modal = document.createElement('div');
+        const getCSSVar = (varName, fallback) => {
+            return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+        };
+
         modal.style.cssText = `
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: white;
+            background: ${getCSSVar('--color-white', '#fff')};
             padding: 1.5rem;
             border-radius: 0;
-            box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
-            border: 3px solid #000;
+            box-shadow: 6px 6px 0 ${getCSSVar('--color-shadow-dark', 'rgba(0,0,0,0.2)')};
+            border: 3px solid ${getCSSVar('--color-black', '#000')};
             max-width: 500px;
             max-height: 80vh;
             overflow: auto;
@@ -231,7 +240,7 @@ export class Project {
             font-family: 'Courier New', 'Consolas', monospace;
             image-rendering: crisp-edges;
         `;
-        modal.innerHTML = content + '<br><button onclick="this.parentElement.remove(); document.getElementById(\'modal-backdrop\').remove()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #000; color: white; border: 2px solid #000; border-radius: 0; cursor: pointer; font-family: \'Courier New\', \'Consolas\', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem;">Close</button>';
+        modal.innerHTML = content + '<br><button onclick="this.parentElement.remove(); document.getElementById(\'modal-backdrop\').remove()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: ' + getCSSVar('--color-black', '#000') + '; color: ' + getCSSVar('--color-white', '#fff') + '; border: 2px solid ' + getCSSVar('--color-black', '#000') + '; border-radius: 0; cursor: pointer; font-family: \'Courier New\', \'Consolas\', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem;">Close</button>';
 
         const backdrop = document.createElement('div');
         backdrop.id = 'modal-backdrop';
@@ -241,7 +250,7 @@ export class Project {
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: ${getCSSVar('--color-overlay-dark', 'rgba(0,0,0,0.5)')};
             z-index: 999;
         `;
         backdrop.onclick = () => {

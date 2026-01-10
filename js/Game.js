@@ -52,8 +52,8 @@ export class Game {
         const project1 = new Project(300, -200, {
             label: 'Experiment Alpha',
             shape: 'circle',
-            color: '#1a1f2e',      // Dark midnight bluish charcoal grey (dark star)
-            colorNear: '#ff4444',  // Glowing red when near
+            color: getComputedStyle(document.documentElement).getPropertyValue('--color-star-alpha-base').trim() || '#1a1f2e',      // Dark midnight bluish charcoal grey (dark star)
+            colorNear: getComputedStyle(document.documentElement).getPropertyValue('--color-star-alpha-glow').trim() || '#ff4444',  // Glowing red when near
             size: 80,
             boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Experiment Alpha</h2><p>This is a simple test project to demonstrate the interaction system.</p><p>In a real implementation, this would showcase actual work.</p>'
@@ -62,8 +62,8 @@ export class Game {
         const project2 = new Project(-250, 200, {
             label: 'Experiment Beta',
             shape: 'circle',
-            color: '#f5f5f5',      // Almost white (light star)
-            colorNear: '#ff8844',  // Glowing orange when near
+            color: getComputedStyle(document.documentElement).getPropertyValue('--color-star-beta-base').trim() || '#f5f5f5',      // Almost white (light star)
+            colorNear: getComputedStyle(document.documentElement).getPropertyValue('--color-star-beta-glow').trim() || '#ff8844',  // Glowing orange when near
             size: 80,
             boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Experiment Beta</h2><p>Another test project with a different shape and color.</p><p>Each project can have its own unique presentation style.</p>'
@@ -161,11 +161,16 @@ export class Game {
                 canvas.height = 64;
                 const ctx = canvas.getContext('2d');
                 
+                // Get CSS custom property values
+                const getCSSVar = (varName, fallback) => {
+                    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+                };
+
                 // Draw grid pattern
-                ctx.fillStyle = '#f8f8f8';
+                ctx.fillStyle = getCSSVar('--color-gray-200', '#f8f8f8');
                 ctx.fillRect(0, 0, 64, 64);
                 
-                ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.strokeStyle = getCSSVar('--color-overlay-medium', 'rgba(0, 0, 0, 0.1)');
                 ctx.lineWidth = 1;
                 
                 // Draw grid lines
@@ -436,7 +441,17 @@ export class Game {
                 const ringSize = ringProgress * effect.maxSize;
                 const ringAlpha = alpha * (1 - ringProgress);
 
-                ctx.strokeStyle = `rgba(99, 102, 241, ${ringAlpha})`;
+                // Get CSS custom property for accent color
+                const getCSSVar = (varName, fallback) => {
+                    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+                };
+                const accentColor = getCSSVar('--color-accent-indigo', '#6366f1');
+                const hex = accentColor.replace('#', '');
+                const r = parseInt(hex.substr(0, 2), 16);
+                const g = parseInt(hex.substr(2, 2), 16);
+                const b = parseInt(hex.substr(4, 2), 16);
+
+                ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${ringAlpha})`;
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(0, 0, ringSize, 0, Math.PI * 2);
@@ -444,7 +459,7 @@ export class Game {
 
                 // Inner pixel burst
                 if (ringProgress < 0.3) {
-                    ctx.fillStyle = `rgba(99, 102, 241, ${ringAlpha * 0.8})`;
+                    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${ringAlpha * 0.8})`;
                     ctx.fillRect(-2, -2, 4, 4);
                 }
             }

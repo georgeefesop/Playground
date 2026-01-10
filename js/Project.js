@@ -57,21 +57,46 @@ export class Project {
     }
 
     render(ctx, camera) {
-        const screenX = this.x - camera.x;
-        const screenY = this.y - camera.y;
+        const screenX = this.x;
+        const screenY = this.y;
 
-        // Only render if on screen
-        if (screenX < -this.size || screenX > camera.width + this.size ||
-            screenY < -this.size || screenY > camera.height + this.size) {
+        // Only render if on screen (accounting for zoom)
+        const screenPos = camera.worldToScreen(this.x, this.y);
+        if (screenPos.x < -this.size || screenPos.x > camera.width + this.size ||
+            screenPos.y < -this.size || screenPos.y > camera.height + this.size) {
             return;
         }
 
         ctx.save();
         ctx.translate(screenX, screenY);
         ctx.scale(this.hoverScale, this.hoverScale);
+        ctx.imageSmoothingEnabled = false; // Pixel art style
 
         // Subtle pulse animation
         const pulse = Math.sin(Date.now() * 0.001 + this.pulseOffset) * 0.05 + 1;
+
+        // Get current color based on proximity
+        const currentColor = this.getCurrentColor();
+        const colorRgb = this.hexToRgb(currentColor);
+        const nearColorRgb = this.hexToRgb(this.colorNear);
+
+        // Bright glowing gradient radiating from projects when nearby
+        if (this.proximityValue > 0.1 && nearColorRgb) {
+            const gradientRadius = this.boundaryRadius * this.proximityValue;
+            const emanationGradient = ctx.createRadialGradient(0, 0, this.size * 0.5, 0, 0, gradientRadius);
+            
+            // Bright glowing gradient matching the near color
+            const glowIntensity = this.proximityValue;
+            emanationGradient.addColorStop(0, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.6})`);
+            emanationGradient.addColorStop(0.3, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.4})`);
+            emanationGradient.addColorStop(0.6, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.2})`);
+            emanationGradient.addColorStop(1, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, 0)`);
+
+            ctx.fillStyle = emanationGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, gradientRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
 
         // Shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
@@ -79,16 +104,12 @@ export class Project {
         ctx.arc(2, 2, this.size * 0.5 * pulse, 0, Math.PI * 2);
         ctx.fill();
 
-        // Get current color based on proximity
-        const currentColor = this.getCurrentColor();
-
         // Gradient fill
         const gradient = ctx.createRadialGradient(-this.size * 0.15, -this.size * 0.15, 0, 0, 0, this.size * 0.5 * pulse);
 
         // Lighter center
-        const centerColor = this.hexToRgb(currentColor);
-        if (centerColor) {
-            gradient.addColorStop(0, `rgba(${centerColor.r + 40}, ${centerColor.g + 40}, ${centerColor.b + 40}, 1)`);
+        if (colorRgb) {
+            gradient.addColorStop(0, `rgba(${colorRgb.r + 40}, ${colorRgb.g + 40}, ${colorRgb.b + 40}, 1)`);
             gradient.addColorStop(1, currentColor);
         } else {
             gradient.addColorStop(0, currentColor);
@@ -116,11 +137,11 @@ export class Project {
         // Boundary circle (drawn in world space, not scaled)
         ctx.save();
         ctx.translate(screenX, screenY);
+        ctx.imageSmoothingEnabled = false;
 
         // Show boundary at 20% opacity with current color
-        const boundaryColor = this.hexToRgb(currentColor);
-        if (boundaryColor) {
-            ctx.strokeStyle = `rgba(${boundaryColor.r}, ${boundaryColor.g}, ${boundaryColor.b}, 0.2)`;
+        if (colorRgb) {
+            ctx.strokeStyle = `rgba(${colorRgb.r}, ${colorRgb.g}, ${colorRgb.b}, 0.2)`;
             ctx.lineWidth = 2;
             ctx.setLineDash([5, 5]); // Dashed line
             ctx.beginPath();
@@ -129,9 +150,9 @@ export class Project {
             ctx.setLineDash([]); // Reset dash
         }
 
-        // Label (also in world space)
-        ctx.fillStyle = '#666';
-        ctx.font = '500 14px -apple-system, sans-serif';
+        // Label - Pixel art style
+        ctx.fillStyle = currentColor;
+        ctx.font = 'bold 12px "Courier New", "Consolas", monospace';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.fillText(this.label, 0, this.size * 0.5 + 15);
@@ -162,7 +183,7 @@ export class Project {
     }
 
     showModal(content) {
-        // Create a modal to display project content
+        // Create a modal to display project content - Pixel style
         const modal = document.createElement('div');
         modal.style.cssText = `
             position: fixed;
@@ -170,15 +191,18 @@ export class Project {
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
-            padding: 2rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 600px;
+            padding: 1.5rem;
+            border-radius: 0;
+            box-shadow: 6px 6px 0 rgba(0,0,0,0.2);
+            border: 3px solid #000;
+            max-width: 500px;
             max-height: 80vh;
             overflow: auto;
             z-index: 1000;
+            font-family: 'Courier New', 'Consolas', monospace;
+            image-rendering: crisp-edges;
         `;
-        modal.innerHTML = content + '<br><button onclick="this.parentElement.remove(); document.getElementById(\'modal-backdrop\').remove()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #1a1a1a; color: white; border: none; border-radius: 8px; cursor: pointer;">Close</button>';
+        modal.innerHTML = content + '<br><button onclick="this.parentElement.remove(); document.getElementById(\'modal-backdrop\').remove()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #000; color: white; border: 2px solid #000; border-radius: 0; cursor: pointer; font-family: \'Courier New\', \'Consolas\', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem;">Close</button>';
 
         const backdrop = document.createElement('div');
         backdrop.id = 'modal-backdrop';

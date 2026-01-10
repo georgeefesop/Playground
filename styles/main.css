@@ -5,12 +5,15 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'SF Pro Display', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Courier New', 'Consolas', monospace;
     overflow: hidden;
     background: #fafafa;
     color: #000;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: auto;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 /* Canvas */
@@ -39,64 +42,72 @@ body {
     display: none !important;
 }
 
-/* Tutorial Panel */
+/* Tutorial Panel - Pixel Style */
 #tutorial {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     background: white;
-    padding: 3rem;
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-    max-width: 500px;
+    padding: 1.5rem;
+    border-radius: 0;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+    max-width: 400px;
     text-align: center;
-    animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    animation: pixelDialogIn 0.15s steps(3);
+    border: 3px solid #000;
+    image-rendering: crisp-edges;
 }
 
 .tutorial-content h2 {
     margin-bottom: 1rem;
-    font-size: 2rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.5px;
     color: #000;
+    font-family: 'Courier New', 'Consolas', monospace;
+    text-transform: uppercase;
 }
 
 .tutorial-content p {
     margin-bottom: 1rem;
     line-height: 1.6;
-    color: #666;
-    font-size: 1rem;
+    color: #000;
+    font-size: 0.875rem;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-weight: 500;
 }
 
 #controls-hint {
-    font-weight: 600;
+    font-weight: 700;
     color: #000;
 }
 
 #start-btn {
     margin-top: 1.5rem;
-    padding: 0.875rem 2.5rem;
-    font-size: 1rem;
-    font-weight: 600;
+    padding: 0.75rem 2rem;
+    font-size: 0.875rem;
+    font-weight: 700;
     background: #000;
     color: white;
-    border: none;
-    border-radius: 12px;
+    border: 2px solid #000;
+    border-radius: 0;
     cursor: pointer;
-    transition: all 0.2s ease;
-    letter-spacing: -0.01em;
+    transition: none;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: 'Courier New', 'Consolas', monospace;
+    image-rendering: crisp-edges;
 }
 
 #start-btn:hover {
-    background: #1a1a1a;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: #333;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
 }
 
 #start-btn:active {
-    transform: translateY(0);
+    transform: translate(1px, 1px);
+    box-shadow: none;
 }
 
 /* Thought Bubble - Pixel Art Style */
@@ -122,25 +133,29 @@ body {
 #guide-comment::before {
     content: '';
     position: absolute;
-    bottom: -12px;
-    left: 16px;
     width: 0;
     height: 0;
-    border-left: 12px solid transparent;
-    border-right: 0 solid transparent;
-    border-top: 12px solid #000;
+    border: 6px solid transparent;
+    border-top-color: #000;
+    transform: rotate(var(--indicator-rotate, 0deg));
+    top: var(--indicator-top, auto);
+    right: var(--indicator-right, auto);
+    bottom: var(--indicator-bottom, -12px);
+    left: var(--indicator-left, 16px);
 }
 
 #guide-comment::after {
     content: '';
     position: absolute;
-    bottom: -9px;
-    left: 16px;
     width: 0;
     height: 0;
-    border-left: 12px solid transparent;
-    border-right: 0 solid transparent;
-    border-top: 12px solid white;
+    border: 6px solid transparent;
+    border-top-color: white;
+    transform: rotate(var(--indicator-rotate, 0deg));
+    top: var(--indicator-top, auto);
+    right: var(--indicator-right, auto);
+    bottom: var(--indicator-bottom, -9px);
+    left: var(--indicator-left, 16px);
 }
 
 /* Message Prompt - Pixel Style */
@@ -354,4 +369,194 @@ body {
 ::selection {
     background: rgba(0, 0, 0, 0.1);
     color: #000;
+}
+
+/* Left Side Settings Panel */
+#settings-panel {
+    position: fixed;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: white;
+    padding: 1rem;
+    border: 3px solid #000;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    min-width: 200px;
+    max-width: 250px;
+    image-rendering: crisp-edges;
+    font-family: 'Courier New', 'Consolas', monospace;
+}
+
+#settings-panel.hidden {
+    display: none;
+}
+
+.settings-header {
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+    color: #000;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5rem;
+}
+
+.settings-section {
+    margin-bottom: 1.25rem;
+}
+
+.settings-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    color: #000;
+}
+
+.background-library {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.background-item {
+    padding: 0.5rem;
+    border: 2px solid #000;
+    background: #f0f0f0;
+    cursor: pointer;
+    transition: none;
+    font-family: 'Courier New', 'Consolas', monospace;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.background-preview {
+    width: 100%;
+    height: 64px;
+    border: 2px solid #000;
+    background: #fff;
+    overflow: hidden;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    flex-shrink: 0;
+}
+
+.background-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+    color: #000;
+}
+
+.background-item:hover {
+    background: #e0e0e0;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.background-item:hover .background-preview {
+    border-color: #333;
+}
+
+.background-item:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+}
+
+.background-item.active {
+    background: #000;
+}
+
+.background-item.active .background-label {
+    color: white;
+}
+
+.background-item.active .background-preview {
+    border-color: #fff;
+}
+
+.settings-option {
+    margin-bottom: 0.75rem;
+}
+
+.settings-option label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+    color: #000;
+}
+
+.settings-option input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: #e0e0e0;
+    border: 2px solid #000;
+    outline: none;
+}
+
+.settings-option input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #000;
+    cursor: pointer;
+    border: 2px solid #000;
+}
+
+.settings-option input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #000;
+    cursor: pointer;
+    border: 2px solid #000;
+}
+
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.settings-toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #000;
+}
+
+#settings-toggle-btn {
+    position: fixed;
+    left: 1rem;
+    top: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: #000;
+    color: white;
+    border: 2px solid #000;
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    z-index: 1001;
+    image-rendering: crisp-edges;
+}
+
+#settings-toggle-btn:hover {
+    background: #333;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+#settings-toggle-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
 }

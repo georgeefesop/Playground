@@ -5,7 +5,9 @@ export class Character {
         this.targetX = x;
         this.targetY = y;
         this.size = 48;
-        this.speed = 2.5; // Reduced from 3
+        this.baseSpeed = 2.5;
+        this.speedMultiplier = 1.5; // Default 1.5x
+        this.speed = this.baseSpeed * this.speedMultiplier;
         this.angle = 0;
         this.velocityX = 0;
         this.velocityY = 0;
@@ -96,8 +98,8 @@ export class Character {
     }
 
     render(ctx, camera) {
-        const screenX = this.x - camera.x;
-        const screenY = this.y - camera.y;
+        const screenX = this.x;
+        const screenY = this.y;
 
         ctx.save();
         ctx.translate(screenX, screenY);
@@ -167,5 +169,10 @@ export class Character {
 
     setHovered(hovered) {
         this.isHovered = hovered;
+    }
+
+    setSpeedMultiplier(multiplier) {
+        this.speedMultiplier = multiplier;
+        this.speed = this.baseSpeed * this.speedMultiplier;
     }
 }

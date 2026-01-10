@@ -26,9 +26,13 @@ export class Game {
         // Menu state
         this.activeMenu = false;
 
+        // Click effects
+        this.clickEffects = [];
+
         this.setupProjects();
         this.setupUI();
         this.setupInteraction();
+        this.setupSettingsPanel();
 
         // Center camera on character
         this.camera.x = this.character.x - this.camera.width / 2;
@@ -39,8 +43,8 @@ export class Game {
         const project1 = new Project(300, -200, {
             label: 'Test Project Alpha',
             shape: 'circle',
-            color: '#3b82f6',      // Darker blue
-            colorNear: '#fbbf24',  // Gold when near - dramatic change
+            color: '#1a1f2e',      // Dark midnight bluish charcoal grey
+            colorNear: '#ff4444',  // Glowing red when near
             size: 80,
             boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Test Project Alpha</h2><p>This is a simple test project to demonstrate the interaction system.</p><p>In a real implementation, this would showcase actual work.</p>'
@@ -49,8 +53,8 @@ export class Game {
         const project2 = new Project(-250, 200, {
             label: 'Experiment Beta',
             shape: 'circle',
-            color: '#ec4899',      // Pink
-            colorNear: '#14b8a6',  // Teal when near - dramatic change
+            color: '#1e2329',      // Dark charcoal grey (slightly different value)
+            colorNear: '#ff8844',  // Glowing orange when near
             size: 80,
             boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Experiment Beta</h2><p>Another test project with a different shape and color.</p><p>Each project can have its own unique presentation style.</p>'
@@ -69,6 +73,133 @@ export class Game {
         startBtn.addEventListener('click', () => {
             this.startGame();
         });
+
+        // Close tutorial with Enter or Spacebar
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const tutorial = document.getElementById('tutorial');
+                if (!tutorial.classList.contains('hidden')) {
+                    e.preventDefault();
+                    this.startGame();
+                }
+                
+                // Close message prompt
+                if (this.activeMenu) {
+                    e.preventDefault();
+                    this.hideMenu();
+                }
+            }
+        });
+    }
+
+    setupSettingsPanel() {
+        const toggleBtn = document.getElementById('settings-toggle-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        let isOpen = false;
+
+        toggleBtn.addEventListener('click', () => {
+            isOpen = !isOpen;
+            if (isOpen) {
+                settingsPanel.classList.remove('hidden');
+            } else {
+                settingsPanel.classList.add('hidden');
+            }
+        });
+
+        // Background library
+        const backgrounds = [
+            { name: 'Space', image: 'assets/space.png', id: 'space' },
+            { name: 'Grid', image: null, id: 'grid' }
+        ];
+
+        const backgroundLibrary = document.getElementById('background-library');
+        backgrounds.forEach(bg => {
+            const item = document.createElement('div');
+            item.className = 'background-item';
+            item.dataset.backgroundId = bg.id;
+            
+            // Create preview tile
+            const preview = document.createElement('div');
+            preview.className = 'background-preview';
+            
+            if (bg.image) {
+                // Image background - create img element
+                const img = document.createElement('img');
+                img.src = bg.image;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.imageRendering = 'pixelated';
+                preview.appendChild(img);
+            } else {
+                // Grid background - create canvas to draw grid pattern
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw grid pattern
+                ctx.fillStyle = '#f8f8f8';
+                ctx.fillRect(0, 0, 64, 64);
+                
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.lineWidth = 1;
+                
+                // Draw grid lines
+                for (let x = 0; x <= 64; x += 8) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, 64);
+                    ctx.stroke();
+                }
+                for (let y = 0; y <= 64; y += 8) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(64, y);
+                    ctx.stroke();
+                }
+                
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                preview.appendChild(canvas);
+            }
+            
+            // Create label
+            const label = document.createElement('div');
+            label.className = 'background-label';
+            label.textContent = bg.name;
+            
+            item.appendChild(preview);
+            item.appendChild(label);
+            
+            if (bg.id === 'space') {
+                item.classList.add('active');
+            }
+
+            item.addEventListener('click', () => {
+                // Remove active from all
+                backgroundLibrary.querySelectorAll('.background-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                item.classList.add('active');
+                this.world.setBackground(bg.id, bg.image);
+            });
+
+            backgroundLibrary.appendChild(item);
+        });
+
+        // Speed slider
+        const speedSlider = document.getElementById('speed-slider');
+        speedSlider.addEventListener('input', (e) => {
+            const speedMultiplier = parseFloat(e.target.value);
+            this.character.setSpeedMultiplier(speedMultiplier);
+        });
+
+        // Grid toggle
+        const gridToggle = document.getElementById('grid-toggle');
+        gridToggle.addEventListener('change', (e) => {
+            this.world.setShowGrid(e.target.checked);
+        });
     }
 
     setupInteraction() {
@@ -76,16 +207,19 @@ export class Game {
 
         // Click on character to send message
         canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.camera.screenToWorld(screenX, screenY);
+
+            // Add click effect
+            this.addClickEffect(worldPos.x, worldPos.y);
+
             // Close menu if clicking elsewhere
             if (this.activeMenu) {
                 this.hideMenu();
                 return;
             }
-
-            const rect = canvas.getBoundingClientRect();
-            const screenX = e.clientX - rect.left;
-            const screenY = e.clientY - rect.top;
-            const worldPos = this.camera.screenToWorld(screenX, screenY);
 
             // Check if clicked on character
             if (this.character.containsPoint(worldPos.x, worldPos.y)) {
@@ -185,9 +319,9 @@ export class Game {
         bubble.textContent = this.thoughtBubble.text;
         bubble.classList.remove('hidden');
 
-        // Position to the LEFT of character
-        bubble.style.left = `${charScreenPos.x - 300}px`; // 300px to the left (bubble width + spacing)
-        bubble.style.top = `${charScreenPos.y - 40}px`; // Slightly above character
+        // Position above head, slightly to the right
+        bubble.style.left = `${charScreenPos.x + 20}px`; // Slightly right of center
+        bubble.style.top = `${charScreenPos.y - 80}px`; // Above head
         bubble.style.transform = 'translateX(0)';
     }
 
@@ -230,6 +364,61 @@ export class Game {
         });
     }
 
+    addClickEffect(x, y) {
+        this.clickEffects.push({
+            x,
+            y,
+            timer: 0,
+            duration: 30, // frames (about 0.5 seconds at 60fps)
+            size: 0,
+            maxSize: 40
+        });
+    }
+
+    updateClickEffects() {
+        this.clickEffects = this.clickEffects.filter(effect => {
+            effect.timer += 1; // Increment frame counter
+            const progress = effect.timer / effect.duration;
+            effect.size = progress * effect.maxSize;
+            return effect.timer < effect.duration;
+        });
+    }
+
+    renderClickEffects(ctx, camera) {
+        this.clickEffects.forEach(effect => {
+            const screenX = effect.x - camera.x;
+            const screenY = effect.y - camera.y;
+            const progress = effect.timer / effect.duration;
+            const alpha = 1 - progress;
+
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.imageSmoothingEnabled = false;
+
+            // Pixel art style click effect - expanding rings
+            const ringCount = 3;
+            for (let i = 0; i < ringCount; i++) {
+                const ringProgress = (progress + i * 0.2) % 1;
+                const ringSize = ringProgress * effect.maxSize;
+                const ringAlpha = alpha * (1 - ringProgress);
+
+                ctx.strokeStyle = `rgba(99, 102, 241, ${ringAlpha})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, ringSize, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inner pixel burst
+                if (ringProgress < 0.3) {
+                    ctx.fillStyle = `rgba(99, 102, 241, ${ringAlpha * 0.8})`;
+                    ctx.fillRect(-2, -2, 4, 4);
+                }
+            }
+
+            ctx.restore();
+        });
+    }
+
     update() {
         // Handle input
         const movement = this.input.getMovementVector();
@@ -257,6 +446,9 @@ export class Game {
 
         // Update camera
         this.camera.follow(this.character);
+
+        // Update click effects
+        this.updateClickEffects();
 
         // Update thought bubble
         if (this.thoughtBubble.active) {
@@ -297,6 +489,9 @@ export class Game {
 
     render() {
         this.world.render(this.camera, this.character);
+        // Render click effects on top
+        const ctx = this.world.getCanvas().getContext('2d');
+        this.renderClickEffects(ctx, this.camera);
     }
 
     gameLoop() {

@@ -10,6 +10,11 @@ export class World {
         // Projects in the world
         this.projects = [];
 
+        // Background settings
+        this.currentBackground = 'space';
+        this.backgroundImage = null;
+        this.showGrid = true;
+
         this.resize();
         window.addEventListener('resize', () => this.resize());
     }
@@ -19,17 +24,82 @@ export class World {
         this.canvas.height = window.innerHeight;
     }
 
+    drawBackground(camera) {
+        if (this.currentBackground === 'grid') {
+            // Grid background (default light)
+            this.ctx.fillStyle = '#f8f8f8';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        } else if (this.currentBackground === 'space') {
+            // Space background
+            if (!this.backgroundImage || !this.backgroundImage.complete) {
+                if (!this.backgroundImage) {
+                    this.backgroundImage = new Image();
+                    this.backgroundImage.src = 'assets/space.png';
+                }
+                // Fallback while loading
+                this.ctx.fillStyle = '#0a0a0f';
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            } else {
+                // Create pattern
+                const pattern = this.ctx.createPattern(this.backgroundImage, 'repeat');
+                if (pattern) {
+                    this.ctx.fillStyle = pattern;
+                    // Draw background covering visible area plus some buffer
+                    const startX = Math.floor(camera.x / this.backgroundImage.width) * this.backgroundImage.width;
+                    const startY = Math.floor(camera.y / this.backgroundImage.height) * this.backgroundImage.height;
+                    const endX = camera.x + this.canvas.width + this.backgroundImage.width;
+                    const endY = camera.y + this.canvas.height + this.backgroundImage.height;
+
+                    this.ctx.fillRect(
+                        startX - camera.x,
+                        startY - camera.y,
+                        endX - startX,
+                        endY - startY
+                    );
+                } else {
+                    // Fallback
+                    this.ctx.fillStyle = '#0a0a0f';
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+            }
+        } else {
+            // Default fallback
+            this.ctx.fillStyle = '#0a0a0f';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+    }
+
     addProject(project) {
         this.projects.push(project);
     }
 
+    setBackground(backgroundId, imagePath) {
+        this.currentBackground = backgroundId;
+        if (imagePath) {
+            this.backgroundImage = new Image();
+            this.backgroundImage.src = imagePath;
+        } else {
+            this.backgroundImage = null;
+        }
+    }
+
+    setShowGrid(show) {
+        this.showGrid = show;
+    }
+
     render(camera, character) {
-        // Clear canvas
-        this.ctx.fillStyle = '#f8f8f8';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        // Apply zoom transform
+        this.ctx.save();
+        this.ctx.scale(camera.zoom, camera.zoom);
+        this.ctx.translate(-camera.x, -camera.y);
+        
+        // Draw background
+        this.drawBackground(camera);
 
         // Draw subtle grid for depth
-        this.drawGrid(camera);
+        if (this.showGrid) {
+            this.drawGrid(camera);
+        }
 
         // Draw projects
         this.projects.forEach(project => {
@@ -38,6 +108,8 @@ export class World {
 
         // Draw character
         character.render(this.ctx, camera);
+        
+        this.ctx.restore();
     }
 
     drawGrid(camera) {

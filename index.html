@@ -22,26 +22,48 @@
             </div>
         </div>
 
-        <!-- Chat Interface -->
-        <div id="chat-interface" class="hidden">
-            <div id="chat-messages"></div>
-            <div id="chat-input-container">
-                <input type="text" id="chat-input" placeholder="Talk to The Guide...">
-                <button id="voice-btn" title="Voice input">🎤</button>
-                <button id="send-btn">Send</button>
+        <!-- Thought Bubble from The Guide -->
+        <div id="guide-comment" class="hidden"></div>
+
+        <!-- Action Menu (Click on character) -->
+        <div id="action-menu" class="context-menu hidden">
+            <button id="send-message-btn" class="menu-item">
+                💬 Send Message
+            </button>
+        </div>
+
+        <!-- Customize Menu (Right-click on character) -->
+        <div id="customize-menu" class="context-menu hidden">
+            <div class="menu-header">Customize Responses</div>
+            <div id="responses-list" class="responses-list"></div>
+            <button id="add-response-btn" class="menu-item add-btn">
+                + Add Response
+            </button>
+        </div>
+
+        <!-- Message Prompt Dialog -->
+        <div id="message-prompt" class="dialog hidden">
+            <div class="dialog-content">
+                <h3>Message The Guide</h3>
+                <input type="text" id="message-input" placeholder="Type your message..." autofocus>
+                <div class="dialog-actions">
+                    <button id="message-send-btn" class="btn-primary">Send</button>
+                    <button id="message-cancel-btn" class="btn-secondary">Cancel</button>
+                </div>
             </div>
         </div>
 
-        <!-- Floating comment bubble from The Guide -->
-        <div id="guide-comment" class="hidden"></div>
-
-        <!-- Chat toggle button -->
-        <button id="chat-toggle" class="floating-btn" title="Chat with The Guide">
-            💬
-        </button>
-
-        <!-- Info about current project -->
-        <div id="project-info" class="hidden"></div>
+        <!-- Response Dialog -->
+        <div id="response-dialog" class="dialog hidden">
+            <div class="dialog-content">
+                <h3>Add Custom Response</h3>
+                <textarea id="response-input" placeholder="Enter a response The Guide can use..." rows="4"></textarea>
+                <div class="dialog-actions">
+                    <button id="response-save-btn" class="btn-primary">Save</button>
+                    <button id="response-cancel-btn" class="btn-secondary">Cancel</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->

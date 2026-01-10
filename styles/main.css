@@ -38,7 +38,7 @@ body {
     display: none !important;
 }
 
-/* Tutorial Panel */
+/* Tutorial Panel - Polished */
 #tutorial {
     position: absolute;
     top: 50%;
@@ -46,17 +46,21 @@ body {
     transform: translate(-50%, -50%);
     background: white;
     padding: 3rem;
-    border-radius: 16px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    border-radius: 20px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.1);
     max-width: 500px;
     text-align: center;
-    animation: fadeIn 0.5s ease;
+    animation: fadeInScale 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .tutorial-content h2 {
     margin-bottom: 1rem;
     font-size: 2rem;
     font-weight: 600;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .tutorial-content p {
@@ -72,197 +76,248 @@ body {
 
 #start-btn {
     margin-top: 1rem;
-    padding: 0.75rem 2rem;
+    padding: 0.875rem 2.5rem;
     font-size: 1rem;
     font-weight: 600;
-    background: #1a1a1a;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
 #start-btn:hover {
-    background: #333;
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
 #start-btn:active {
     transform: translateY(0);
 }
 
-/* Chat Interface */
-#chat-interface {
-    position: absolute;
-    bottom: 2rem;
-    right: 2rem;
-    width: 400px;
-    max-height: 500px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    display: flex;
-    flex-direction: column;
-    animation: slideUp 0.3s ease;
-}
-
-#chat-messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1.5rem;
-    max-height: 400px;
-}
-
-.chat-message {
-    margin-bottom: 1rem;
-    animation: fadeIn 0.3s ease;
-}
-
-.chat-message.user {
-    text-align: right;
-}
-
-.chat-message .bubble {
-    display: inline-block;
-    padding: 0.75rem 1rem;
-    border-radius: 12px;
-    max-width: 80%;
-    word-wrap: break-word;
-}
-
-.chat-message.guide .bubble {
-    background: #f0f0f0;
-    color: #1a1a1a;
-}
-
-.chat-message.user .bubble {
-    background: #1a1a1a;
-    color: white;
-}
-
-.chat-message .label {
-    font-size: 0.75rem;
-    color: #999;
-    margin-bottom: 0.25rem;
-    font-weight: 600;
-}
-
-#chat-input-container {
-    display: flex;
-    padding: 1rem;
-    border-top: 1px solid #eee;
-    gap: 0.5rem;
-}
-
-#chat-input {
-    flex: 1;
-    padding: 0.75rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    outline: none;
-}
-
-#chat-input:focus {
-    border-color: #1a1a1a;
-}
-
-#voice-btn,
-#send-btn {
-    padding: 0.75rem 1rem;
-    background: #f0f0f0;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-size: 0.95rem;
-}
-
-#voice-btn:hover,
-#send-btn:hover {
-    background: #e0e0e0;
-}
-
-#voice-btn.recording {
-    background: #ff4444;
-    animation: pulse 1s infinite;
-}
-
-#send-btn {
-    background: #1a1a1a;
-    color: white;
-    font-weight: 600;
-}
-
-#send-btn:hover {
-    background: #333;
-}
-
-/* Guide Comment Bubble */
+/* Thought Bubble - Redesigned */
 #guide-comment {
     position: absolute;
     background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    max-width: 300px;
+    padding: 1.25rem 1.75rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 0 1px rgba(0, 0, 0, 0.1);
+    max-width: 320px;
     font-size: 0.95rem;
-    line-height: 1.5;
-    animation: fadeIn 0.3s ease;
+    line-height: 1.6;
+    animation: thoughtBubbleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 100;
+    border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
-#guide-comment::after {
+#guide-comment::before {
     content: '';
     position: absolute;
-    bottom: -8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 0;
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-top: 8px solid white;
+    bottom: -10px;
+    left: 20px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-right: 1px solid rgba(102, 126, 234, 0.1);
+    border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+    transform: rotate(45deg);
+    border-radius: 0 0 4px 0;
 }
 
-/* Chat Toggle Button */
-#chat-toggle {
+/* Context Menus - Elegant */
+.context-menu {
     position: absolute;
-    bottom: 2rem;
-    right: 2rem;
-    width: 60px;
-    height: 60px;
-    background: #1a1a1a;
-    color: white;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem;
+    min-width: 200px;
+    animation: menuSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 1000;
+}
+
+.menu-header {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #666;
+    border-bottom: 1px solid #f0f0f0;
+    margin-bottom: 0.5rem;
+}
+
+.menu-item {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.menu-item:hover {
+    background: #f5f3ff;
+    color: #6366f1;
+}
+
+.menu-item.add-btn {
+    margin-top: 0.5rem;
+    color: #6366f1;
+    font-weight: 500;
+}
+
+/* Responses List */
+.responses-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0.5rem 0;
+}
+
+.response-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    margin: 0.25rem 0;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+}
+
+.response-item:hover {
+    background: #f0f0f0;
+}
+
+.response-text {
+    flex: 1;
+    color: #1a1a1a;
+}
+
+.response-delete-btn {
+    width: 24px;
+    height: 24px;
+    background: transparent;
     border: none;
     border-radius: 50%;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
+    color: #999;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s, background 0.2s;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-#chat-toggle:hover {
-    background: #333;
-    transform: scale(1.05);
+.response-delete-btn:hover {
+    background: #ffe4e6;
+    color: #ef4444;
 }
 
-#chat-toggle:active {
-    transform: scale(0.95);
-}
-
-/* Project Info */
-#project-info {
-    position: absolute;
-    top: 2rem;
+/* Dialog Boxes - Modern */
+.dialog {
+    position: fixed;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     background: white;
-    padding: 1rem 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    animation: slideDown 0.3s ease;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+    min-width: 400px;
+    max-width: 500px;
+    animation: dialogIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2000;
+}
+
+.dialog::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+    animation: fadeIn 0.3s ease;
+}
+
+.dialog-content h3 {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.dialog-content input,
+.dialog-content textarea {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+    margin-bottom: 1.5rem;
+}
+
+.dialog-content input:focus,
+.dialog-content textarea:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.dialog-content textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.dialog-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.btn-secondary {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+.btn-secondary:hover {
+    background: #e5e7eb;
 }
 
 /* Animations */
@@ -275,49 +330,56 @@ body {
     }
 }
 
-@keyframes slideUp {
+@keyframes fadeInScale {
     from {
-        transform: translateY(20px);
         opacity: 0;
+        transform: translate(-50%, -50%) scale(0.9);
     }
     to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes thoughtBubbleIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes menuSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
         transform: translateY(0);
-        opacity: 1;
     }
 }
 
-@keyframes slideDown {
+@keyframes dialogIn {
     from {
-        transform: translateX(-50%) translateY(-20px);
         opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
     }
     to {
-        transform: translateX(-50%) translateY(0);
         opacity: 1;
-    }
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1);
     }
 }
 
 /* Mobile Responsive */
 @media (max-width: 768px) {
-    #chat-interface {
-        width: calc(100% - 2rem);
-        left: 1rem;
-        right: 1rem;
-        bottom: 1rem;
-    }
-
     #tutorial {
         width: calc(100% - 2rem);
         padding: 2rem;
+        margin: 1rem;
     }
 
     .tutorial-content h2 {
@@ -326,15 +388,17 @@ body {
 
     #guide-comment {
         max-width: 250px;
-        font-size: 0.85rem;
+        font-size: 0.875rem;
+        padding: 1rem 1.25rem;
     }
 
-    #chat-toggle {
-        width: 50px;
-        height: 50px;
-        font-size: 1.2rem;
-        bottom: 1rem;
-        right: 1rem;
+    .context-menu {
+        min-width: 180px;
+    }
+
+    .dialog {
+        min-width: calc(100% - 2rem);
+        margin: 1rem;
     }
 }
 
@@ -345,25 +409,58 @@ body {
     left: 2rem;
     width: 120px;
     height: 120px;
-    opacity: 0.6;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+#virtual-joystick:active {
+    opacity: 0.9;
 }
 
 #joystick-base {
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.08);
     border-radius: 50%;
     position: relative;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 #joystick-stick {
     width: 50%;
     height: 50%;
-    background: rgba(0, 0, 0, 0.3);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 50%;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     transition: transform 0.1s;
+    box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+}
+
+/* Scrollbar Styling */
+.responses-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.responses-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.responses-list::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+.responses-list::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+
+/* Selection Styling */
+::selection {
+    background: rgba(102, 126, 234, 0.2);
+    color: #1a1a1a;
 }

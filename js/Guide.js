@@ -37,6 +37,7 @@ RESTRICTIONS:
         this.conversationHistory = [];
         this.lastCommentLocation = null;
         this.commentCooldown = 0;
+        this.customResponses = [];
     }
 
     async sendMessage(userMessage, context = {}) {
@@ -138,6 +139,23 @@ RESTRICTIONS:
 
     clearHistory() {
         this.conversationHistory = [];
+    }
+
+    // Custom responses management
+    getCustomResponses() {
+        return this.customResponses;
+    }
+
+    setCustomResponses(responses) {
+        this.customResponses = responses;
+    }
+
+    addCustomResponse(response) {
+        this.customResponses.push(response);
+    }
+
+    removeCustomResponse(index) {
+        this.customResponses.splice(index, 1);
     }
 
     // In production, you'd implement this:

@@ -16,13 +16,45 @@ export class Game {
         this.isRunning = false;
         this.tutorialShown = false;
 
+        // Thought bubble state
+        this.thoughtBubble = {
+            active: false,
+            text: '',
+            timer: 0,
+            duration: 5000
+        };
+
+        // Menu state
+        this.activeMenu = null; // 'action' or 'customize'
+        this.menuPosition = { x: 0, y: 0 };
+
+        // Load persisted data
+        this.loadPersistedData();
+
         this.setupProjects();
         this.setupUI();
-        this.setupChat();
+        this.setupInteraction();
 
         // Center camera on character initially
         this.camera.x = this.character.x - this.camera.width / 2;
         this.camera.y = this.character.y - this.camera.height / 2;
+    }
+
+    loadPersistedData() {
+        const saved = localStorage.getItem('guide_responses');
+        if (saved) {
+            try {
+                const responses = JSON.parse(saved);
+                this.guide.setCustomResponses(responses);
+            } catch (e) {
+                console.error('Failed to load persisted data:', e);
+            }
+        }
+    }
+
+    savePersistedData() {
+        const responses = this.guide.getCustomResponses();
+        localStorage.setItem('guide_responses', JSON.stringify(responses));
     }
 
     setupProjects() {
@@ -60,73 +92,222 @@ export class Game {
         });
     }
 
-    setupChat() {
-        const chatToggle = document.getElementById('chat-toggle');
-        const chatInterface = document.getElementById('chat-interface');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const voiceBtn = document.getElementById('voice-btn');
+    setupInteraction() {
+        const canvas = this.world.getCanvas();
 
-        // Toggle chat
-        chatToggle.addEventListener('click', () => {
-            const isHidden = chatInterface.classList.contains('hidden');
-            if (isHidden) {
-                chatInterface.classList.remove('hidden');
-                chatToggle.style.display = 'none';
-                chatInput.focus();
-            } else {
-                chatInterface.classList.add('hidden');
-                chatToggle.style.display = 'block';
+        // Click on character
+        canvas.addEventListener('click', (e) => {
+            if (this.activeMenu) {
+                // Close menu if clicking elsewhere
+                this.activeMenu = null;
+                this.hideAllMenus();
+                return;
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.camera.screenToWorld(screenX, screenY);
+
+            // Check if clicked on character
+            if (this.character.containsPoint(worldPos.x, worldPos.y)) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showActionMenu(screenX, screenY);
             }
         });
 
-        // Send message
-        const sendMessage = async () => {
-            const message = chatInput.value.trim();
-            if (!message) return;
+        // Right-click on character for customization
+        canvas.addEventListener('contextmenu', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.camera.screenToWorld(screenX, screenY);
 
-            // Clear input
-            chatInput.value = '';
-
-            // Add user message to chat
-            this.addChatMessage(message, 'user');
-
-            // Get nearby projects for context
-            const nearbyProjects = this.getNearbyProjects(150);
-
-            // Get response from Guide
-            const response = await this.guide.sendMessage(message, { nearbyProjects });
-
-            // Add guide response to chat
-            this.addChatMessage(response, 'guide');
-        };
-
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
+            // Check if right-clicked on character
+            if (this.character.containsPoint(worldPos.x, worldPos.y)) {
+                e.preventDefault();
+                this.showCustomizeMenu(screenX, screenY);
             }
         });
 
-        // Voice input (simplified - full implementation would use Web Speech API)
-        voiceBtn.addEventListener('click', () => {
-            this.addChatMessage('Voice input coming soon!', 'guide');
+        // Mouse move for hover effect
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.camera.screenToWorld(screenX, screenY);
+
+            const isHovered = this.character.containsPoint(worldPos.x, worldPos.y);
+            this.character.setHovered(isHovered);
+            canvas.style.cursor = isHovered ? 'pointer' : 'default';
         });
     }
 
-    addChatMessage(text, sender) {
-        const messagesContainer = document.getElementById('chat-messages');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${sender}`;
+    showActionMenu(x, y) {
+        this.activeMenu = 'action';
+        this.menuPosition = { x, y };
 
-        const label = sender === 'user' ? 'You' : 'The Guide';
-        messageDiv.innerHTML = `
-            <div class="label">${label}</div>
-            <div class="bubble">${text}</div>
-        `;
+        const menu = document.getElementById('action-menu');
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.classList.remove('hidden');
 
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Setup send message button if not already done
+        const sendMsgBtn = document.getElementById('send-message-btn');
+        sendMsgBtn.onclick = () => {
+            this.showMessagePrompt();
+        };
+    }
+
+    showCustomizeMenu(x, y) {
+        this.activeMenu = 'customize';
+        this.menuPosition = { x, y };
+
+        const menu = document.getElementById('customize-menu');
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.classList.remove('hidden');
+
+        // Populate responses list
+        this.populateResponsesList();
+
+        // Setup buttons if not already done
+        const addBtn = document.getElementById('add-response-btn');
+        addBtn.onclick = () => {
+            this.showAddResponseDialog();
+        };
+    }
+
+    hideAllMenus() {
+        document.getElementById('action-menu').classList.add('hidden');
+        document.getElementById('customize-menu').classList.add('hidden');
+        document.getElementById('message-prompt').classList.add('hidden');
+        document.getElementById('response-dialog').classList.add('hidden');
+    }
+
+    showMessagePrompt() {
+        this.hideAllMenus();
+
+        const prompt = document.getElementById('message-prompt');
+        const input = document.getElementById('message-input');
+
+        prompt.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+
+        const sendBtn = document.getElementById('message-send-btn');
+        const cancelBtn = document.getElementById('message-cancel-btn');
+
+        sendBtn.onclick = async () => {
+            const message = input.value.trim();
+            if (message) {
+                this.hideAllMenus();
+                this.showThoughtBubble('...');
+
+                const nearbyProjects = this.getNearbyProjects(150);
+                const response = await this.guide.sendMessage(message, { nearbyProjects });
+
+                this.showThoughtBubble(response);
+            }
+        };
+
+        cancelBtn.onclick = () => {
+            this.hideAllMenus();
+        };
+
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        };
+    }
+
+    showAddResponseDialog() {
+        const dialog = document.getElementById('response-dialog');
+        const input = document.getElementById('response-input');
+
+        dialog.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+
+        const saveBtn = document.getElementById('response-save-btn');
+        const cancelBtn = document.getElementById('response-cancel-btn');
+
+        saveBtn.onclick = () => {
+            const response = input.value.trim();
+            if (response) {
+                this.guide.addCustomResponse(response);
+                this.savePersistedData();
+                this.populateResponsesList();
+                dialog.classList.add('hidden');
+            }
+        };
+
+        cancelBtn.onclick = () => {
+            dialog.classList.add('hidden');
+        };
+    }
+
+    populateResponsesList() {
+        const list = document.getElementById('responses-list');
+        const responses = this.guide.getCustomResponses();
+
+        list.innerHTML = '';
+
+        responses.forEach((response, index) => {
+            const item = document.createElement('div');
+            item.className = 'response-item';
+            item.innerHTML = `
+                <span class="response-text">${response}</span>
+                <button class="response-delete-btn" data-index="${index}">×</button>
+            `;
+
+            const deleteBtn = item.querySelector('.response-delete-btn');
+            deleteBtn.onclick = () => {
+                this.guide.removeCustomResponse(index);
+                this.savePersistedData();
+                this.populateResponsesList();
+            };
+
+            list.appendChild(item);
+        });
+    }
+
+    showThoughtBubble(text, duration = 5000) {
+        this.thoughtBubble = {
+            active: true,
+            text,
+            timer: Date.now(),
+            duration
+        };
+    }
+
+    updateThoughtBubble() {
+        if (!this.thoughtBubble.active) return;
+
+        // Check if bubble should expire
+        if (Date.now() - this.thoughtBubble.timer > this.thoughtBubble.duration) {
+            this.thoughtBubble.active = false;
+            return;
+        }
+
+        // Position bubble near character
+        const charScreenPos = this.character.getScreenPosition(this.camera);
+        const bubble = document.getElementById('guide-comment');
+
+        bubble.textContent = this.thoughtBubble.text;
+        bubble.classList.remove('hidden');
+
+        // Position above and to the side of character
+        bubble.style.left = `${charScreenPos.x + 60}px`;
+        bubble.style.top = `${charScreenPos.y - 60}px`;
+        bubble.style.transform = 'translateX(0)';
+    }
+
+    hideThoughtBubble() {
+        const bubble = document.getElementById('guide-comment');
+        bubble.classList.add('hidden');
     }
 
     startGame() {
@@ -135,7 +316,7 @@ export class Game {
 
         // Show initial greeting from The Guide
         setTimeout(() => {
-            this.showGuideComment("Welcome! I'm The Guide. Feel free to explore - I'll be here if you need me.");
+            this.showThoughtBubble("Welcome! I'm The Guide. Click on me to chat.");
         }, 500);
 
         this.isRunning = true;
@@ -153,23 +334,6 @@ export class Game {
         }
 
         tutorial.classList.remove('hidden');
-    }
-
-    showGuideComment(text, duration = 5000) {
-        const commentEl = document.getElementById('guide-comment');
-        commentEl.textContent = text;
-        commentEl.classList.remove('hidden');
-
-        // Position above character
-        const charScreenPos = this.camera.worldToScreen(this.character.x, this.character.y);
-        commentEl.style.left = `${charScreenPos.x}px`;
-        commentEl.style.top = `${charScreenPos.y - 80}px`;
-        commentEl.style.transform = 'translateX(-50%)';
-
-        // Hide after duration
-        setTimeout(() => {
-            commentEl.classList.add('hidden');
-        }, duration);
     }
 
     getNearbyProjects(radius) {
@@ -193,10 +357,15 @@ export class Game {
             );
         }
 
-        // Handle click to move
-        const clickTarget = this.input.consumeClickTarget();
-        if (clickTarget) {
-            this.character.setTarget(clickTarget.x, clickTarget.y);
+        // Handle click to move (only if no menu is active)
+        if (!this.activeMenu) {
+            const clickTarget = this.input.consumeClickTarget();
+            if (clickTarget) {
+                // Check if not clicking on character
+                if (!this.character.containsPoint(clickTarget.x, clickTarget.y)) {
+                    this.character.setTarget(clickTarget.x, clickTarget.y);
+                }
+            }
         }
 
         // Update character
@@ -204,6 +373,13 @@ export class Game {
 
         // Update camera to follow character
         this.camera.follow(this.character);
+
+        // Update thought bubble position
+        if (this.thoughtBubble.active) {
+            this.updateThoughtBubble();
+        } else {
+            this.hideThoughtBubble();
+        }
 
         // Update projects (check proximity)
         const nearbyProjects = this.getNearbyProjects(150);
@@ -223,13 +399,13 @@ export class Game {
         });
 
         // Generate contextual comments from The Guide
-        if (nearbyProjects.length > 0 && !this.character.isMoving) {
+        if (nearbyProjects.length > 0 && !this.character.isMoving && !this.thoughtBubble.active) {
             // Occasionally comment on nearby projects
-            if (Math.random() < 0.01) { // 1% chance per frame when stationary
+            if (Math.random() < 0.005) { // 0.5% chance per frame when stationary
                 const randomProject = nearbyProjects[Math.floor(Math.random() * nearbyProjects.length)];
                 this.guide.generateContextComment(randomProject, charPos).then(comment => {
                     if (comment) {
-                        this.showGuideComment(comment);
+                        this.showThoughtBubble(comment);
                     }
                 });
             }

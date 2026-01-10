@@ -60,7 +60,7 @@ export class Project {
         const screenX = this.x;
         const screenY = this.y;
 
-        // Only render if on screen (accounting for zoom)
+        // Only render if on screen
         const screenPos = camera.worldToScreen(this.x, this.y);
         if (screenPos.x < -this.size || screenPos.x > camera.width + this.size ||
             screenPos.y < -this.size || screenPos.y > camera.height + this.size) {
@@ -82,14 +82,16 @@ export class Project {
 
         // Bright glowing gradient radiating from projects when nearby
         if (this.proximityValue > 0.1 && nearColorRgb) {
-            const gradientRadius = this.boundaryRadius * this.proximityValue;
+            // Limit gradient radius to prevent huge artifacts
+            const maxGradientRadius = 150;
+            const gradientRadius = Math.min(this.boundaryRadius * this.proximityValue, maxGradientRadius);
             const emanationGradient = ctx.createRadialGradient(0, 0, this.size * 0.5, 0, 0, gradientRadius);
             
             // Bright glowing gradient matching the near color
             const glowIntensity = this.proximityValue;
-            emanationGradient.addColorStop(0, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.6})`);
-            emanationGradient.addColorStop(0.3, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.4})`);
-            emanationGradient.addColorStop(0.6, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.2})`);
+            emanationGradient.addColorStop(0, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.4})`);
+            emanationGradient.addColorStop(0.4, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.25})`);
+            emanationGradient.addColorStop(0.7, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.1})`);
             emanationGradient.addColorStop(1, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, 0)`);
 
             ctx.fillStyle = emanationGradient;

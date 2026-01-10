@@ -39,6 +39,7 @@ export class Game {
         this.camera.y = this.character.y - this.camera.height / 2;
     }
 
+
     setupProjects() {
         const project1 = new Project(300, -200, {
             label: 'Test Project Alpha',
@@ -171,6 +172,63 @@ export class Game {
             
             item.appendChild(preview);
             item.appendChild(label);
+            
+            if (bg.id === 'space') {
+                item.classList.add('active');
+            }
+
+            item.addEventListener('click', () => {
+                // Remove active from all
+                backgroundLibrary.querySelectorAll('.background-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                item.classList.add('active');
+                this.world.setBackground(bg.id, bg.image);
+            });
+
+            backgroundLibrary.appendChild(item);
+        });
+
+        // Speed slider
+        const speedSlider = document.getElementById('speed-slider');
+        speedSlider.addEventListener('input', (e) => {
+            const speedMultiplier = parseFloat(e.target.value);
+            this.character.setSpeedMultiplier(speedMultiplier);
+        });
+
+        // Grid toggle
+        const gridToggle = document.getElementById('grid-toggle');
+        gridToggle.addEventListener('change', (e) => {
+            this.world.setShowGrid(e.target.checked);
+        });
+    }
+
+    setupSettingsPanel() {
+        const toggleBtn = document.getElementById('settings-toggle-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        let isOpen = false;
+
+        toggleBtn.addEventListener('click', () => {
+            isOpen = !isOpen;
+            if (isOpen) {
+                settingsPanel.classList.remove('hidden');
+            } else {
+                settingsPanel.classList.add('hidden');
+            }
+        });
+
+        // Background library
+        const backgrounds = [
+            { name: 'Space', image: 'assets/space.png', id: 'space' },
+            { name: 'Grid', image: null, id: 'grid' }
+        ];
+
+        const backgroundLibrary = document.getElementById('background-library');
+        backgrounds.forEach(bg => {
+            const item = document.createElement('div');
+            item.className = 'background-item';
+            item.textContent = bg.name;
+            item.dataset.backgroundId = bg.id;
             
             if (bg.id === 'space') {
                 item.classList.add('active');

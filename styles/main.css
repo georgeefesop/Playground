@@ -560,3 +560,17 @@ body {
     transform: translate(1px, 1px);
     box-shadow: none;
 }
+
+/* Version Number */
+#version-number {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.5);
+    font-family: 'Courier New', 'Consolas', monospace;
+    z-index: 1000;
+    pointer-events: none;
+    user-select: none;
+}

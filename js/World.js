@@ -88,13 +88,12 @@ export class World {
     }
 
     render(camera, character) {
-        // Apply zoom transform
-        this.ctx.save();
-        this.ctx.scale(camera.zoom, camera.zoom);
-        this.ctx.translate(-camera.x, -camera.y);
-        
-        // Draw background
+        // Draw background BEFORE camera transform (in screen space)
         this.drawBackground(camera);
+
+        // Apply camera transform for world elements
+        this.ctx.save();
+        this.ctx.translate(-camera.x, -camera.y);
 
         // Draw subtle grid for depth
         if (this.showGrid) {

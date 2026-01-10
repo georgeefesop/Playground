@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dev Preview - Auto Refresh</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+        }
+        #refresh-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #000;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        #refresh-btn:hover {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <button id="refresh-btn" onclick="refreshPreview()">↻ Refresh</button>
+    <iframe id="preview" src="index.html"></iframe>
+
+    <script>
+        function refreshPreview() {
+            document.getElementById('preview').src = 'index.html?t=' + Date.now();
+        }
+
+        // Auto-refresh every 2 seconds
+        setInterval(refreshPreview, 2000);
+
+        // Listen for keyboard shortcut (Cmd/Ctrl + R)
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'r') {
+                e.preventDefault();
+                refreshPreview();
+            }
+        });
+    </script>
+</body>
+</html>

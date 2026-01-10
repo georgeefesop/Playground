@@ -9,12 +9,11 @@ export class Game {
     constructor() {
         this.world = new World();
         this.camera = new Camera(window.innerWidth, window.innerHeight);
-        this.character = new Character(0, 0); // Start at origin
+        this.character = new Character(0, 0);
         this.input = new Input(this.world.getCanvas(), this.camera);
         this.guide = new Guide();
 
         this.isRunning = false;
-        this.tutorialShown = false;
 
         // Thought bubble state
         this.thoughtBubble = {
@@ -25,40 +24,18 @@ export class Game {
         };
 
         // Menu state
-        this.activeMenu = null; // 'action' or 'customize'
-        this.menuPosition = { x: 0, y: 0 };
-
-        // Load persisted data
-        this.loadPersistedData();
+        this.activeMenu = false;
 
         this.setupProjects();
         this.setupUI();
         this.setupInteraction();
 
-        // Center camera on character initially
+        // Center camera on character
         this.camera.x = this.character.x - this.camera.width / 2;
         this.camera.y = this.character.y - this.camera.height / 2;
     }
 
-    loadPersistedData() {
-        const saved = localStorage.getItem('guide_responses');
-        if (saved) {
-            try {
-                const responses = JSON.parse(saved);
-                this.guide.setCustomResponses(responses);
-            } catch (e) {
-                console.error('Failed to load persisted data:', e);
-            }
-        }
-    }
-
-    savePersistedData() {
-        const responses = this.guide.getCustomResponses();
-        localStorage.setItem('guide_responses', JSON.stringify(responses));
-    }
-
     setupProjects() {
-        // Add a couple of simple test projects
         const project1 = new Project(300, -200, {
             label: 'Test Project Alpha',
             shape: 'circle',
@@ -80,12 +57,10 @@ export class Game {
     }
 
     setupUI() {
-        // Handle window resize
         window.addEventListener('resize', () => {
             this.camera.resize(window.innerWidth, window.innerHeight);
         });
 
-        // Start button
         const startBtn = document.getElementById('start-btn');
         startBtn.addEventListener('click', () => {
             this.startGame();
@@ -95,12 +70,11 @@ export class Game {
     setupInteraction() {
         const canvas = this.world.getCanvas();
 
-        // Click on character
+        // Click on character to send message
         canvas.addEventListener('click', (e) => {
+            // Close menu if clicking elsewhere
             if (this.activeMenu) {
-                // Close menu if clicking elsewhere
-                this.activeMenu = null;
-                this.hideAllMenus();
+                this.hideMenu();
                 return;
             }
 
@@ -112,26 +86,16 @@ export class Game {
             // Check if clicked on character
             if (this.character.containsPoint(worldPos.x, worldPos.y)) {
                 e.preventDefault();
-                e.stopPropagation();
-                this.showActionMenu(screenX, screenY);
+                this.showMessagePrompt();
             }
         });
 
-        // Right-click on character for customization
+        // Prevent right-click menu
         canvas.addEventListener('contextmenu', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const screenX = e.clientX - rect.left;
-            const screenY = e.clientY - rect.top;
-            const worldPos = this.camera.screenToWorld(screenX, screenY);
-
-            // Check if right-clicked on character
-            if (this.character.containsPoint(worldPos.x, worldPos.y)) {
-                e.preventDefault();
-                this.showCustomizeMenu(screenX, screenY);
-            }
+            e.preventDefault();
         });
 
-        // Mouse move for hover effect
+        // Mouse hover effect
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             const screenX = e.clientX - rect.left;
@@ -144,50 +108,13 @@ export class Game {
         });
     }
 
-    showActionMenu(x, y) {
-        this.activeMenu = 'action';
-        this.menuPosition = { x, y };
-
-        const menu = document.getElementById('action-menu');
-        menu.style.left = `${x}px`;
-        menu.style.top = `${y}px`;
-        menu.classList.remove('hidden');
-
-        // Setup send message button if not already done
-        const sendMsgBtn = document.getElementById('send-message-btn');
-        sendMsgBtn.onclick = () => {
-            this.showMessagePrompt();
-        };
-    }
-
-    showCustomizeMenu(x, y) {
-        this.activeMenu = 'customize';
-        this.menuPosition = { x, y };
-
-        const menu = document.getElementById('customize-menu');
-        menu.style.left = `${x}px`;
-        menu.style.top = `${y}px`;
-        menu.classList.remove('hidden');
-
-        // Populate responses list
-        this.populateResponsesList();
-
-        // Setup buttons if not already done
-        const addBtn = document.getElementById('add-response-btn');
-        addBtn.onclick = () => {
-            this.showAddResponseDialog();
-        };
-    }
-
-    hideAllMenus() {
-        document.getElementById('action-menu').classList.add('hidden');
-        document.getElementById('customize-menu').classList.add('hidden');
+    hideMenu() {
+        this.activeMenu = false;
         document.getElementById('message-prompt').classList.add('hidden');
-        document.getElementById('response-dialog').classList.add('hidden');
     }
 
     showMessagePrompt() {
-        this.hideAllMenus();
+        this.activeMenu = true;
 
         const prompt = document.getElementById('message-prompt');
         const input = document.getElementById('message-input');
@@ -202,7 +129,7 @@ export class Game {
         sendBtn.onclick = async () => {
             const message = input.value.trim();
             if (message) {
-                this.hideAllMenus();
+                this.hideMenu();
                 this.showThoughtBubble('...');
 
                 const nearbyProjects = this.getNearbyProjects(150);
@@ -213,7 +140,7 @@ export class Game {
         };
 
         cancelBtn.onclick = () => {
-            this.hideAllMenus();
+            this.hideMenu();
         };
 
         input.onkeypress = (e) => {
@@ -221,57 +148,6 @@ export class Game {
                 sendBtn.click();
             }
         };
-    }
-
-    showAddResponseDialog() {
-        const dialog = document.getElementById('response-dialog');
-        const input = document.getElementById('response-input');
-
-        dialog.classList.remove('hidden');
-        input.value = '';
-        input.focus();
-
-        const saveBtn = document.getElementById('response-save-btn');
-        const cancelBtn = document.getElementById('response-cancel-btn');
-
-        saveBtn.onclick = () => {
-            const response = input.value.trim();
-            if (response) {
-                this.guide.addCustomResponse(response);
-                this.savePersistedData();
-                this.populateResponsesList();
-                dialog.classList.add('hidden');
-            }
-        };
-
-        cancelBtn.onclick = () => {
-            dialog.classList.add('hidden');
-        };
-    }
-
-    populateResponsesList() {
-        const list = document.getElementById('responses-list');
-        const responses = this.guide.getCustomResponses();
-
-        list.innerHTML = '';
-
-        responses.forEach((response, index) => {
-            const item = document.createElement('div');
-            item.className = 'response-item';
-            item.innerHTML = `
-                <span class="response-text">${response}</span>
-                <button class="response-delete-btn" data-index="${index}">×</button>
-            `;
-
-            const deleteBtn = item.querySelector('.response-delete-btn');
-            deleteBtn.onclick = () => {
-                this.guide.removeCustomResponse(index);
-                this.savePersistedData();
-                this.populateResponsesList();
-            };
-
-            list.appendChild(item);
-        });
     }
 
     showThoughtBubble(text, duration = 5000) {
@@ -302,7 +178,6 @@ export class Game {
         // Position above and to the side of character
         bubble.style.left = `${charScreenPos.x + 60}px`;
         bubble.style.top = `${charScreenPos.y - 60}px`;
-        bubble.style.transform = 'translateX(0)';
     }
 
     hideThoughtBubble() {
@@ -314,7 +189,6 @@ export class Game {
         const tutorial = document.getElementById('tutorial');
         tutorial.classList.add('hidden');
 
-        // Show initial greeting from The Guide
         setTimeout(() => {
             this.showThoughtBubble("Welcome! I'm The Guide. Click on me to chat.");
         }, 500);
@@ -350,7 +224,6 @@ export class Game {
         const movement = this.input.getMovementVector();
 
         if (movement.dx !== 0 || movement.dy !== 0) {
-            // Move character based on input
             this.character.setTarget(
                 this.character.x + movement.dx * 200,
                 this.character.y + movement.dy * 200
@@ -361,7 +234,6 @@ export class Game {
         if (!this.activeMenu) {
             const clickTarget = this.input.consumeClickTarget();
             if (clickTarget) {
-                // Check if not clicking on character
                 if (!this.character.containsPoint(clickTarget.x, clickTarget.y)) {
                     this.character.setTarget(clickTarget.x, clickTarget.y);
                 }
@@ -371,17 +243,17 @@ export class Game {
         // Update character
         this.character.update();
 
-        // Update camera to follow character
+        // Update camera
         this.camera.follow(this.character);
 
-        // Update thought bubble position
+        // Update thought bubble
         if (this.thoughtBubble.active) {
             this.updateThoughtBubble();
         } else {
             this.hideThoughtBubble();
         }
 
-        // Update projects (check proximity)
+        // Update projects
         const nearbyProjects = this.getNearbyProjects(150);
         const charPos = this.character.getPosition();
 
@@ -389,19 +261,17 @@ export class Game {
             const isNearby = project.distanceTo(charPos.x, charPos.y) < 150;
             project.update(isNearby);
 
-            // Check for interaction (spacebar or Enter when near)
+            // Check for interaction
             if (isNearby && (this.input.keys[' '] || this.input.keys['enter'])) {
                 project.interact();
-                // Reset keys to prevent repeated triggers
                 this.input.keys[' '] = false;
                 this.input.keys['enter'] = false;
             }
         });
 
-        // Generate contextual comments from The Guide
+        // Occasional contextual comments
         if (nearbyProjects.length > 0 && !this.character.isMoving && !this.thoughtBubble.active) {
-            // Occasionally comment on nearby projects
-            if (Math.random() < 0.005) { // 0.5% chance per frame when stationary
+            if (Math.random() < 0.005) {
                 const randomProject = nearbyProjects[Math.floor(Math.random() * nearbyProjects.length)];
                 this.guide.generateContextComment(randomProject, charPos).then(comment => {
                     if (comment) {
@@ -426,7 +296,6 @@ export class Game {
     }
 
     start() {
-        // Show tutorial first
         this.showTutorial();
     }
 }

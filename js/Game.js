@@ -39,18 +39,20 @@ export class Game {
         const project1 = new Project(300, -200, {
             label: 'Test Project Alpha',
             shape: 'circle',
-            color: '#6366f1',
-            colorNear: '#818cf8',
+            color: '#3b82f6',      // Darker blue
+            colorNear: '#fbbf24',  // Gold when near - dramatic change
             size: 80,
+            boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Test Project Alpha</h2><p>This is a simple test project to demonstrate the interaction system.</p><p>In a real implementation, this would showcase actual work.</p>'
         });
 
         const project2 = new Project(-250, 200, {
             label: 'Experiment Beta',
             shape: 'circle',
-            color: '#ec4899',
-            colorNear: '#f472b6',
+            color: '#ec4899',      // Pink
+            colorNear: '#14b8a6',  // Teal when near - dramatic change
             size: 80,
+            boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Experiment Beta</h2><p>Another test project with a different shape and color.</p><p>Each project can have its own unique presentation style.</p>'
         });
 
@@ -121,6 +123,12 @@ export class Game {
         const prompt = document.getElementById('message-prompt');
         const input = document.getElementById('message-input');
 
+        // Position to the right of the character
+        const charScreenPos = this.character.getScreenPosition(this.camera);
+        prompt.style.left = `${charScreenPos.x + 80}px`; // 80px to the right
+        prompt.style.top = `${charScreenPos.y - 60}px`; // Slightly above center
+        prompt.style.transform = 'none';
+
         prompt.classList.remove('hidden');
         input.value = '';
         input.focus();
@@ -134,7 +142,7 @@ export class Game {
                 this.hideMenu();
                 this.showThoughtBubble('...');
 
-                const nearbyProjects = this.getNearbyProjects(150);
+                const nearbyProjects = this.getNearbyProjects(200);
                 const response = await this.guide.sendMessage(message, { nearbyProjects });
 
                 this.showThoughtBubble(response);
@@ -170,16 +178,17 @@ export class Game {
             return;
         }
 
-        // Position bubble near character
+        // Position bubble near character - LEFT SIDE
         const charScreenPos = this.character.getScreenPosition(this.camera);
         const bubble = document.getElementById('guide-comment');
 
         bubble.textContent = this.thoughtBubble.text;
         bubble.classList.remove('hidden');
 
-        // Position above and to the side of character
-        bubble.style.left = `${charScreenPos.x + 60}px`;
-        bubble.style.top = `${charScreenPos.y - 60}px`;
+        // Position to the LEFT of character
+        bubble.style.left = `${charScreenPos.x - 300}px`; // 300px to the left (bubble width + spacing)
+        bubble.style.top = `${charScreenPos.y - 40}px`; // Slightly above character
+        bubble.style.transform = 'translateX(0)';
     }
 
     hideThoughtBubble() {
@@ -226,9 +235,10 @@ export class Game {
         const movement = this.input.getMovementVector();
 
         if (movement.dx !== 0 || movement.dy !== 0) {
+            // Reduced from 200 to 50 for more responsive control
             this.character.setTarget(
-                this.character.x + movement.dx * 200,
-                this.character.y + movement.dy * 200
+                this.character.x + movement.dx * 50,
+                this.character.y + movement.dy * 50
             );
         }
 

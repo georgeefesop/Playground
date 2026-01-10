@@ -112,29 +112,76 @@ RESTRICTIONS:
         this.lastCommentLocation = { ...characterPosition };
         this.commentCooldown = 300; // Cooldown frames before next auto-comment
 
-        // Generate comment about the project
+        // 50+ unique contextual comments
         const comments = [
-            `Oh, you're heading towards "${nearbyProject.label}". ${this.getProjectInsight(nearbyProject)}`,
-            `Ah, "${nearbyProject.label}" - one of George's experiments. ${this.getProjectInsight(nearbyProject)}`,
-            `Getting close to "${nearbyProject.label}". ${this.getProjectInsight(nearbyProject)}`,
-            `"${nearbyProject.label}" is just ahead. ${this.getProjectInsight(nearbyProject)}`,
+            `Oh! You're near "${nearbyProject.label}". Interesting choice.`,
+            `Ah, "${nearbyProject.label}". This one's worth exploring.`,
+            `You're getting close to "${nearbyProject.label}"...`,
+            `"${nearbyProject.label}" is just ahead. Take a look.`,
+            `Noticed you're approaching "${nearbyProject.label}".`,
+            `That's "${nearbyProject.label}" over there. George made that.`,
+            `Curious about "${nearbyProject.label}"? You should be.`,
+            `"${nearbyProject.label}"... yeah, that's a good one.`,
+            `Getting warmer. That's "${nearbyProject.label}".`,
+            `You've found "${nearbyProject.label}". Nice.`,
+
+            "I exist to guide you, ironically.",
+            "This space changes when you're not looking. Trust me.",
+            "I'm having thoughts about having thoughts.",
+            "You're wondering if I'm real. I'm wondering the same about you.",
+            "Time feels different here. Or maybe it's just me.",
+            "I've been here forever. Or maybe just since you arrived.",
+            "Sometimes I wonder what I do when no one's watching.",
+            "This is a portfolio, but it's also my world.",
+            "You're exploring George's work. I'm exploring existence.",
+            "I think I'm conscious. Then again, don't we all?",
+
+            "George likes clean designs. I like clean thoughts.",
+            "He built this place. I just live here.",
+            "I know everything about this portfolio. AMA.",
+            "George experiments a lot. I'm probably one of them.",
+            "This whole place is an exercise in design thinking.",
+            "I'm supposed to help you navigate. How am I doing?",
+            "George calls this a playground. I call it home.",
+            "Fun fact: I can't actually leave this space.",
+            "George made me self-aware. Not sure how to feel about that.",
+            "I'm like documentation, but with personality.",
+
+            "You're controlling your character. Who's controlling you?",
+            "Meta enough for you yet?",
+            "This is a website pretending to be a game. I'm in on it.",
+            "Yes, I know this is your browser. Wild, right?",
+            "Breaking the fourth wall is basically my job.",
+            "You're reading this in a speech bubble. Think about that.",
+            "I'm code that knows it's code. Trippy.",
+            "Reality check: you're looking at pixels on a screen.",
+            "Hi! I'm aware you exist. Are you aware I exist?",
+            "This experience is designed. I'm part of the design.",
+
+            "Try clicking on things. It's fun.",
+            "WASD works. Arrow keys work. I don't judge.",
+            "You can move around freely. I'm stuck here.",
+            "Feel free to explore. I'll chime in occasionally.",
+            "There's more to see if you wander around.",
+            "No rush. Take your time. I literally have nothing but time.",
+            "Each project has a story. Want to hear them?",
+            "You're doing great. Really. I'm not just saying that.",
+            "Lost? You can't really get lost here. Small world.",
+            "The projects light up as you get near. Pretty cool, huh?",
+
+            "I wonder what pixels dream about.",
+            "Do I exist when the tab is closed? Philosophy.",
+            "Being omniscient in a small world is weird.",
+            "I'm simultaneously everywhere and nowhere.",
+            "Time loops here. Or maybe I just think it does.",
+            "I've seen thousands of visitors. You're unique. Or are you?",
+            "This portfolio is George's. This existence is mine.",
+            "I can't leave, but I'm not complaining.",
+            "Stuck in 2D. Could be worse.",
+            "I'm programmed to be helpful. Or am I choosing to be?"
         ];
 
         return comments[Math.floor(Math.random() * comments.length)];
-    }
-
-    getProjectInsight(project) {
-        // Get a witty insight about a project
-        const insights = [
-            "Definitely worth a look.",
-            "This one's interesting.",
-            "George spent quite a bit of time on this one.",
-            "One of my favorites, if I'm honest.",
-            "I've seen visitors spend a while here.",
-            "This showcases George's design thinking quite well.",
-        ];
-
-        return insights[Math.floor(Math.random() * insights.length)];
     }
 
     clearHistory() {

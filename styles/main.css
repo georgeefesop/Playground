@@ -143,63 +143,67 @@ body {
     border-top: 12px solid white;
 }
 
-/* Message Prompt - Clean, No Overlay */
+/* Message Prompt - Pixel Style */
 #message-prompt {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    /* Positioned dynamically via JS */
     background: white;
-    padding: 2rem;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
-    width: 90%;
-    max-width: 450px;
-    animation: dialogIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 1rem 1.25rem;
+    border-radius: 0;
+    box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+    width: 280px;
+    animation: pixelDialogIn 0.15s steps(3);
     z-index: 2000;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 3px solid #000;
+    image-rendering: crisp-edges;
 }
 
 .prompt-content h3 {
-    margin-bottom: 1.5rem;
-    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 700;
     color: #000;
-    letter-spacing: -0.02em;
+    font-family: 'Courier New', 'Consolas', monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 .prompt-content input {
     width: 100%;
-    padding: 0.875rem 1rem;
-    border: 1.5px solid #e5e5e5;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-family: inherit;
+    padding: 0.625rem 0.75rem;
+    border: 2px solid #000;
+    border-radius: 0;
+    font-size: 0.875rem;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-weight: 700;
     outline: none;
-    transition: all 0.2s ease;
-    margin-bottom: 1.5rem;
+    transition: none;
+    margin-bottom: 0.75rem;
+    background: #f0f0f0;
 }
 
 .prompt-content input:focus {
-    border-color: #000;
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    background: #fff;
+    box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.1);
 }
 
 .prompt-actions {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     justify-content: flex-end;
 }
 
 .prompt-actions button {
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 10px;
-    font-size: 0.9375rem;
-    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border: 2px solid #000;
+    border-radius: 0;
+    font-size: 0.75rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
-    letter-spacing: -0.01em;
+    transition: none;
+    font-family: 'Courier New', 'Consolas', monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
 
 #message-send-btn {
@@ -208,17 +212,26 @@ body {
 }
 
 #message-send-btn:hover {
-    background: #1a1a1a;
-    transform: translateY(-1px);
+    background: #333;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+#message-send-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
 }
 
 #message-cancel-btn {
-    background: #f5f5f5;
-    color: #666;
+    background: #f0f0f0;
+    color: #000;
 }
 
 #message-cancel-btn:hover {
-    background: #e5e5e5;
+    background: #e0e0e0;
+}
+
+#message-cancel-btn:active {
+    transform: translate(1px, 1px);
 }
 
 /* Animations */
@@ -260,6 +273,21 @@ body {
     to {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes pixelDialogIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
     }
 }
 

@@ -8,6 +8,7 @@ export class Project {
         this.color = config.color || '#1a1a1a';
         this.colorNear = config.colorNear || this.color;
         this.label = config.label || 'Project';
+        this.boundaryRadius = config.boundaryRadius || 250; // Boundary for triggers
 
         // Animation
         this.hoverScale = 1;
@@ -21,9 +22,8 @@ export class Project {
         this.hoverScale += (targetScale - this.hoverScale) * 0.1;
 
         // Calculate proximity value for color gradient (0-1)
-        // Max distance for gradient effect: 200 pixels
-        const maxDistance = 200;
-        const normalizedDistance = Math.min(distance / maxDistance, 1);
+        // Use boundaryRadius for gradient effect
+        const normalizedDistance = Math.min(distance / this.boundaryRadius, 1);
         const targetProximity = 1 - normalizedDistance;
 
         // Smooth transition
@@ -111,7 +111,25 @@ export class Project {
             ctx.globalAlpha = 1;
         }
 
-        // Label
+        ctx.restore();
+
+        // Boundary circle (drawn in world space, not scaled)
+        ctx.save();
+        ctx.translate(screenX, screenY);
+
+        // Show boundary at 20% opacity with current color
+        const boundaryColor = this.hexToRgb(currentColor);
+        if (boundaryColor) {
+            ctx.strokeStyle = `rgba(${boundaryColor.r}, ${boundaryColor.g}, ${boundaryColor.b}, 0.2)`;
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]); // Dashed line
+            ctx.beginPath();
+            ctx.arc(0, 0, this.boundaryRadius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset dash
+        }
+
+        // Label (also in world space)
         ctx.fillStyle = '#666';
         ctx.font = '500 14px -apple-system, sans-serif';
         ctx.textAlign = 'center';

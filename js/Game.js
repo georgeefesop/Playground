@@ -195,18 +195,14 @@ export class Game {
             const speedMultiplier = parseFloat(e.target.value);
             this.character.setSpeedMultiplier(speedMultiplier);
         });
-
-        // Grid toggle
-        const gridToggle = document.getElementById('grid-toggle');
-        gridToggle.addEventListener('change', (e) => {
-            this.world.setShowGrid(e.target.checked);
-        });
     }
 
     setupInteraction() {
         const canvas = this.world.getCanvas();
 
-        // Click on character to send message
+        // Click handler for character interaction
+        // Note: Input.setupListeners() also registers a click listener for movement.
+        // We use capture phase to intercept character clicks before Input handler processes them.
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             const screenX = e.clientX - rect.left;
@@ -222,12 +218,13 @@ export class Game {
                 return;
             }
 
-            // Check if clicked on character
+            // Check if clicked on character - if so, show message prompt and prevent movement
             if (this.character.containsPoint(worldPos.x, worldPos.y)) {
-                e.preventDefault();
+                // Clear the click target in Input to prevent movement
+                this.input.clickTarget = null;
                 this.showMessagePrompt();
             }
-        });
+        }, true); // Use capture phase to run before Input handler
 
         // Prevent right-click menu
         canvas.addEventListener('contextmenu', (e) => {
@@ -436,6 +433,7 @@ export class Game {
         if (!this.activeMenu) {
             const clickTarget = this.input.consumeClickTarget();
             if (clickTarget) {
+                // Only move if not clicking on character (character clicks are handled in setupInteraction)
                 if (!this.character.containsPoint(clickTarget.x, clickTarget.y)) {
                     this.character.setTarget(clickTarget.x, clickTarget.y);
                 }

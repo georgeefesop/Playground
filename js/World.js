@@ -112,6 +112,7 @@ export class World {
     }
 
     drawGrid(camera) {
+        // Context is already translated by World.render(), so use world coordinates directly
         const gridSize = 100;
         const startX = Math.floor(camera.x / gridSize) * gridSize;
         const startY = Math.floor(camera.y / gridSize) * gridSize;
@@ -121,21 +122,19 @@ export class World {
         this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
         this.ctx.lineWidth = 1;
 
-        // Vertical lines
+        // Vertical lines - use world coordinates directly since context is translated
         for (let x = startX; x < endX; x += gridSize) {
-            const screenX = x - camera.x;
             this.ctx.beginPath();
-            this.ctx.moveTo(screenX, 0);
-            this.ctx.lineTo(screenX, this.canvas.height);
+            this.ctx.moveTo(x, startY);
+            this.ctx.lineTo(x, endY);
             this.ctx.stroke();
         }
 
-        // Horizontal lines
+        // Horizontal lines - use world coordinates directly since context is translated
         for (let y = startY; y < endY; y += gridSize) {
-            const screenY = y - camera.y;
             this.ctx.beginPath();
-            this.ctx.moveTo(0, screenY);
-            this.ctx.lineTo(this.canvas.width, screenY);
+            this.ctx.moveTo(startX, y);
+            this.ctx.lineTo(endX, y);
             this.ctx.stroke();
         }
     }

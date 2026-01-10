@@ -57,18 +57,17 @@ export class Project {
     }
 
     render(ctx, camera) {
-        const screenX = this.x;
-        const screenY = this.y;
-
-        // Only render if on screen
+        // Use screen coordinates since World.render() already applies camera translation
         const screenPos = camera.worldToScreen(this.x, this.y);
+        
+        // Only render if on screen
         if (screenPos.x < -this.size || screenPos.x > camera.width + this.size ||
             screenPos.y < -this.size || screenPos.y > camera.height + this.size) {
             return;
         }
 
         ctx.save();
-        ctx.translate(screenX, screenY);
+        ctx.translate(screenPos.x, screenPos.y);
         ctx.scale(this.hoverScale, this.hoverScale);
         ctx.imageSmoothingEnabled = false; // Pixel art style
 
@@ -138,7 +137,7 @@ export class Project {
 
         // Boundary circle (drawn in world space, not scaled)
         ctx.save();
-        ctx.translate(screenX, screenY);
+        ctx.translate(screenPos.x, screenPos.y);
         ctx.imageSmoothingEnabled = false;
 
         // Show boundary at 20% opacity with current color

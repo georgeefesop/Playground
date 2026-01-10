@@ -40,15 +40,17 @@ export class Game {
             label: 'Test Project Alpha',
             shape: 'circle',
             color: '#6366f1',
+            colorNear: '#818cf8',
             size: 80,
             modal: '<h2>Test Project Alpha</h2><p>This is a simple test project to demonstrate the interaction system.</p><p>In a real implementation, this would showcase actual work.</p>'
         });
 
         const project2 = new Project(-250, 200, {
             label: 'Experiment Beta',
-            shape: 'square',
+            shape: 'circle',
             color: '#ec4899',
-            size: 90,
+            colorNear: '#f472b6',
+            size: 80,
             modal: '<h2>Experiment Beta</h2><p>Another test project with a different shape and color.</p><p>Each project can have its own unique presentation style.</p>'
         });
 
@@ -258,8 +260,9 @@ export class Game {
         const charPos = this.character.getPosition();
 
         this.world.getProjects().forEach(project => {
-            const isNearby = project.distanceTo(charPos.x, charPos.y) < 150;
-            project.update(isNearby);
+            const distance = project.distanceTo(charPos.x, charPos.y);
+            const isNearby = distance < 150;
+            project.update(isNearby, distance);
 
             // Check for interaction
             if (isNearby && (this.input.keys[' '] || this.input.keys['enter'])) {
@@ -269,13 +272,13 @@ export class Game {
             }
         });
 
-        // Occasional contextual comments
-        if (nearbyProjects.length > 0 && !this.character.isMoving && !this.thoughtBubble.active) {
-            if (Math.random() < 0.005) {
+        // Occasional contextual comments - increased frequency
+        if (nearbyProjects.length > 0 && !this.thoughtBubble.active) {
+            if (Math.random() < 0.008) { // ~1 every 2-3 seconds when near projects
                 const randomProject = nearbyProjects[Math.floor(Math.random() * nearbyProjects.length)];
                 this.guide.generateContextComment(randomProject, charPos).then(comment => {
                     if (comment) {
-                        this.showThoughtBubble(comment);
+                        this.showThoughtBubble(comment, 4000);
                     }
                 });
             }

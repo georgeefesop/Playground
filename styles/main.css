@@ -99,34 +99,48 @@ body {
     transform: translateY(0);
 }
 
-/* Thought Bubble */
+/* Thought Bubble - Pixel Art Style */
 #guide-comment {
     position: absolute;
     background: white;
-    padding: 1rem 1.5rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    max-width: 320px;
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    animation: thoughtBubbleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15);
+    max-width: 280px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    animation: pixelBubbleIn 0.15s steps(3);
     z-index: 100;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 3px solid #000;
     font-weight: 500;
     color: #1a1a1a;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
 }
 
 #guide-comment::before {
     content: '';
     position: absolute;
-    bottom: -8px;
-    left: 20px;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-right: 1px solid rgba(0, 0, 0, 0.06);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    transform: rotate(45deg);
+    bottom: -12px;
+    left: 16px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 0 solid transparent;
+    border-top: 12px solid #000;
+}
+
+#guide-comment::after {
+    content: '';
+    position: absolute;
+    bottom: -9px;
+    left: 16px;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 0 solid transparent;
+    border-top: 12px solid white;
 }
 
 /* Message Prompt - Clean, No Overlay */
@@ -219,14 +233,22 @@ body {
     }
 }
 
-@keyframes thoughtBubbleIn {
-    from {
+@keyframes pixelBubbleIn {
+    0% {
         opacity: 0;
-        transform: translateY(8px) scale(0.96);
+        transform: scale(0);
     }
-    to {
+    33% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+    66% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+    100% {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: scale(1);
     }
 }
 

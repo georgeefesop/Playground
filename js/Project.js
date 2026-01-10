@@ -4,19 +4,56 @@ export class Project {
         this.y = y;
         this.config = config;
         this.size = config.size || 80;
-        this.shape = config.shape || 'circle'; // circle, square, portal
+        this.shape = config.shape || 'circle';
         this.color = config.color || '#1a1a1a';
+        this.colorNear = config.colorNear || this.color;
         this.label = config.label || 'Project';
 
         // Animation
         this.hoverScale = 1;
-        this.pulseOffset = Math.random() * Math.PI * 2; // Random phase for pulse
+        this.proximityValue = 0; // 0 = far, 1 = near
+        this.pulseOffset = Math.random() * Math.PI * 2;
     }
 
-    update(isNearby) {
+    update(isNearby, distance) {
         // Hover effect when character is nearby
         const targetScale = isNearby ? 1.1 : 1;
         this.hoverScale += (targetScale - this.hoverScale) * 0.1;
+
+        // Calculate proximity value for color gradient (0-1)
+        // Max distance for gradient effect: 200 pixels
+        const maxDistance = 200;
+        const normalizedDistance = Math.min(distance / maxDistance, 1);
+        const targetProximity = 1 - normalizedDistance;
+
+        // Smooth transition
+        this.proximityValue += (targetProximity - this.proximityValue) * 0.1;
+    }
+
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : null;
+    }
+
+    interpolateColor(color1, color2, factor) {
+        const c1 = this.hexToRgb(color1);
+        const c2 = this.hexToRgb(color2);
+
+        if (!c1 || !c2) return color1;
+
+        const r = Math.round(c1.r + (c2.r - c1.r) * factor);
+        const g = Math.round(c1.g + (c2.g - c1.g) * factor);
+        const b = Math.round(c1.b + (c2.b - c1.b) * factor);
+
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    getCurrentColor() {
+        return this.interpolateColor(this.color, this.colorNear, this.proximityValue);
     }
 
     render(ctx, camera) {
@@ -37,57 +74,46 @@ export class Project {
         const pulse = Math.sin(Date.now() * 0.001 + this.pulseOffset) * 0.05 + 1;
 
         // Shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
         ctx.beginPath();
-        if (this.shape === 'circle') {
-            ctx.arc(2, 2, this.size * 0.5 * pulse, 0, Math.PI * 2);
-        } else {
-            ctx.rect(-this.size * 0.5 * pulse + 2, -this.size * 0.5 * pulse + 2,
-                     this.size * pulse, this.size * pulse);
-        }
+        ctx.arc(2, 2, this.size * 0.5 * pulse, 0, Math.PI * 2);
         ctx.fill();
 
-        // Main shape
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
+        // Get current color based on proximity
+        const currentColor = this.getCurrentColor();
 
-        if (this.shape === 'circle') {
-            ctx.arc(0, 0, this.size * 0.5 * pulse, 0, Math.PI * 2);
-            ctx.fill();
-        } else if (this.shape === 'square') {
-            ctx.rect(-this.size * 0.5 * pulse, -this.size * 0.5 * pulse,
-                     this.size * pulse, this.size * pulse);
-            ctx.fill();
-        } else if (this.shape === 'portal') {
-            // Portal effect - concentric circles
-            for (let i = 3; i > 0; i--) {
-                ctx.globalAlpha = 0.3 * i;
-                ctx.arc(0, 0, (this.size * 0.5 * pulse) * (i / 3), 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-            }
-            ctx.globalAlpha = 1;
+        // Gradient fill
+        const gradient = ctx.createRadialGradient(-this.size * 0.15, -this.size * 0.15, 0, 0, 0, this.size * 0.5 * pulse);
+
+        // Lighter center
+        const centerColor = this.hexToRgb(currentColor);
+        if (centerColor) {
+            gradient.addColorStop(0, `rgba(${centerColor.r + 40}, ${centerColor.g + 40}, ${centerColor.b + 40}, 1)`);
+            gradient.addColorStop(1, currentColor);
+        } else {
+            gradient.addColorStop(0, currentColor);
+            gradient.addColorStop(1, currentColor);
         }
 
-        // Interaction hint (small glow when nearby)
-        if (this.hoverScale > 1) {
-            ctx.strokeStyle = this.color;
-            ctx.lineWidth = 2;
-            ctx.globalAlpha = 0.3;
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.size * 0.5 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glow effect when nearby
+        if (this.proximityValue > 0.3) {
+            ctx.strokeStyle = currentColor;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = this.proximityValue * 0.5;
             ctx.beginPath();
-            if (this.shape === 'circle') {
-                ctx.arc(0, 0, (this.size * 0.5 + 10) * pulse, 0, Math.PI * 2);
-            } else {
-                const halfSize = this.size * 0.5 + 10;
-                ctx.rect(-halfSize * pulse, -halfSize * pulse, halfSize * 2 * pulse, halfSize * 2 * pulse);
-            }
+            ctx.arc(0, 0, (this.size * 0.5 + 8) * pulse, 0, Math.PI * 2);
             ctx.stroke();
             ctx.globalAlpha = 1;
         }
 
         // Label
         ctx.fillStyle = '#666';
-        ctx.font = '14px -apple-system, sans-serif';
+        ctx.font = '500 14px -apple-system, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.fillText(this.label, 0, this.size * 0.5 + 15);

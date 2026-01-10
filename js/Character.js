@@ -52,15 +52,16 @@ export class Character {
             this.angle = Math.atan2(dy, dx);
 
             // Determine sprite direction based on angle
+            // Sprite sheet layout: Row 0=Down, Row 1=Up, Row 2=Left, Row 3=Right
             const angleDeg = (this.angle * 180 / Math.PI + 360) % 360;
             if (angleDeg >= 45 && angleDeg < 135) {
                 this.direction = 0; // Down
             } else if (angleDeg >= 135 && angleDeg < 225) {
-                this.direction = 1; // Left
+                this.direction = 2; // Left (row 2)
             } else if (angleDeg >= 225 && angleDeg < 315) {
-                this.direction = 3; // Up
+                this.direction = 1; // Up (row 1)
             } else {
-                this.direction = 2; // Right
+                this.direction = 3; // Right (row 3)
             }
 
             // Move towards target

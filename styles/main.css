@@ -1,0 +1,369 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    overflow: hidden;
+    background: #f8f8f8;
+    color: #1a1a1a;
+}
+
+/* Canvas */
+#world-canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    cursor: default;
+}
+
+/* UI Overlay */
+#ui-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+#ui-overlay > * {
+    pointer-events: auto;
+}
+
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Tutorial Panel */
+#tutorial {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    max-width: 500px;
+    text-align: center;
+    animation: fadeIn 0.5s ease;
+}
+
+.tutorial-content h2 {
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.tutorial-content p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    color: #666;
+}
+
+#controls-hint {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+#start-btn {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+#start-btn:hover {
+    background: #333;
+    transform: translateY(-2px);
+}
+
+#start-btn:active {
+    transform: translateY(0);
+}
+
+/* Chat Interface */
+#chat-interface {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    width: 400px;
+    max-height: 500px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+}
+
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    max-height: 400px;
+}
+
+.chat-message {
+    margin-bottom: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+
+.chat-message.user {
+    text-align: right;
+}
+
+.chat-message .bubble {
+    display: inline-block;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.chat-message.guide .bubble {
+    background: #f0f0f0;
+    color: #1a1a1a;
+}
+
+.chat-message.user .bubble {
+    background: #1a1a1a;
+    color: white;
+}
+
+.chat-message .label {
+    font-size: 0.75rem;
+    color: #999;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+#chat-input-container {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #eee;
+    gap: 0.5rem;
+}
+
+#chat-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    outline: none;
+}
+
+#chat-input:focus {
+    border-color: #1a1a1a;
+}
+
+#voice-btn,
+#send-btn {
+    padding: 0.75rem 1rem;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.95rem;
+}
+
+#voice-btn:hover,
+#send-btn:hover {
+    background: #e0e0e0;
+}
+
+#voice-btn.recording {
+    background: #ff4444;
+    animation: pulse 1s infinite;
+}
+
+#send-btn {
+    background: #1a1a1a;
+    color: white;
+    font-weight: 600;
+}
+
+#send-btn:hover {
+    background: #333;
+}
+
+/* Guide Comment Bubble */
+#guide-comment {
+    position: absolute;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    max-width: 300px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+    z-index: 100;
+}
+
+#guide-comment::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid white;
+}
+
+/* Chat Toggle Button */
+#chat-toggle {
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+    width: 60px;
+    height: 60px;
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, background 0.2s;
+}
+
+#chat-toggle:hover {
+    background: #333;
+    transform: scale(1.05);
+}
+
+#chat-toggle:active {
+    transform: scale(0.95);
+}
+
+/* Project Info */
+#project-info {
+    position: absolute;
+    top: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.3s ease;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    #chat-interface {
+        width: calc(100% - 2rem);
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
+    }
+
+    #tutorial {
+        width: calc(100% - 2rem);
+        padding: 2rem;
+    }
+
+    .tutorial-content h2 {
+        font-size: 1.5rem;
+    }
+
+    #guide-comment {
+        max-width: 250px;
+        font-size: 0.85rem;
+    }
+
+    #chat-toggle {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+        bottom: 1rem;
+        right: 1rem;
+    }
+}
+
+/* Touch device joystick (will be added dynamically) */
+#virtual-joystick {
+    position: absolute;
+    bottom: 2rem;
+    left: 2rem;
+    width: 120px;
+    height: 120px;
+    opacity: 0.6;
+}
+
+#joystick-base {
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    position: relative;
+}
+
+#joystick-stick {
+    width: 50%;
+    height: 50%;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s;
+}

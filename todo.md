@@ -2,7 +2,7 @@
 
 ## Current Tasks
 
-- [ ] Make speech bubble tail always point towards character
+- [ ] Move speech bubble tail to bottom left corner, pointing left
 
 ## Completed Tasks ✅
 

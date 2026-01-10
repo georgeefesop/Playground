@@ -189,12 +189,11 @@ body {
     width: 0;
     height: 0;
     border: 6px solid transparent;
-    border-top-color: #000;
-    transform: rotate(var(--indicator-rotate, 0deg));
-    top: var(--indicator-top, auto);
-    right: var(--indicator-right, auto);
-    bottom: var(--indicator-bottom, -12px);
-    left: var(--indicator-left, 16px);
+    border-right-color: #000;
+    bottom: 12px;
+    left: -12px;
+    top: auto;
+    right: auto;
 }
 
 #guide-comment::after {
@@ -203,93 +202,11 @@ body {
     width: 0;
     height: 0;
     border: 6px solid transparent;
-    border-top-color: white;
-    transform: rotate(var(--indicator-rotate, 0deg));
-    top: var(--indicator-top, auto);
-    right: var(--indicator-right, auto);
-    bottom: var(--indicator-bottom, -9px);
-    left: var(--indicator-left, 16px);
-}
-
-/* Dynamic indicator positioning */
-#guide-comment[data-indicator-side="top"]::before {
-    top: -12px;
-    bottom: auto;
-    left: var(--indicator-position, 50%);
-    right: auto;
-    border-top-color: transparent;
-    border-bottom-color: #000;
-    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
-}
-
-#guide-comment[data-indicator-side="top"]::after {
-    top: -9px;
-    bottom: auto;
-    left: var(--indicator-position, 50%);
-    right: auto;
-    border-top-color: transparent;
-    border-bottom-color: white;
-    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
-}
-
-#guide-comment[data-indicator-side="bottom"]::before {
-    bottom: -12px;
-    top: auto;
-    left: var(--indicator-position, 50%);
-    right: auto;
-    border-top-color: #000;
-    border-bottom-color: transparent;
-    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
-}
-
-#guide-comment[data-indicator-side="bottom"]::after {
-    bottom: -9px;
-    top: auto;
-    left: var(--indicator-position, 50%);
-    right: auto;
-    border-top-color: white;
-    border-bottom-color: transparent;
-    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
-}
-
-#guide-comment[data-indicator-side="left"]::before {
-    left: -12px;
-    right: auto;
-    top: var(--indicator-position, 50%);
-    bottom: auto;
-    border-left-color: transparent;
-    border-right-color: #000;
-    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
-}
-
-#guide-comment[data-indicator-side="left"]::after {
-    left: -9px;
-    right: auto;
-    top: var(--indicator-position, 50%);
-    bottom: auto;
-    border-left-color: transparent;
     border-right-color: white;
-    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
-}
-
-#guide-comment[data-indicator-side="right"]::before {
-    right: -12px;
-    left: auto;
-    top: var(--indicator-position, 50%);
-    bottom: auto;
-    border-left-color: #000;
-    border-right-color: transparent;
-    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
-}
-
-#guide-comment[data-indicator-side="right"]::after {
-    right: -9px;
-    left: auto;
-    top: var(--indicator-position, 50%);
-    bottom: auto;
-    border-left-color: white;
-    border-right-color: transparent;
-    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
+    bottom: 12px;
+    left: -9px;
+    top: auto;
+    right: auto;
 }
 
 /* Message Prompt - Pixel Style */

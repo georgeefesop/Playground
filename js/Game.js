@@ -165,12 +165,12 @@ export class Game {
                 const getCSSVar = (varName, fallback) => {
                     return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
                 };
-
+                
                 // Draw grid pattern
                 ctx.fillStyle = getCSSVar('--color-gray-200', '#f8f8f8');
                 ctx.fillRect(0, 0, 64, 64);
                 
-                ctx.strokeStyle = getCSSVar('--color-overlay-medium', 'rgba(0, 0, 0, 0.1)');
+                ctx.strokeStyle = getCSSVar('--color-shadow-md', 'rgba(0, 0, 0, 0.1)');
                 ctx.lineWidth = 1;
                 
                 // Draw grid lines

@@ -113,7 +113,7 @@ export class Character {
         };
 
         // Soft shadow
-        ctx.fillStyle = getCSSVar('--color-character-shadow', 'rgba(0, 0, 0, 0.2)');
+        ctx.fillStyle = getCSSVar('--color-shadow-xl', 'rgba(0, 0, 0, 0.2)');
         ctx.beginPath();
         ctx.ellipse(0, this.size * 0.4, this.size * 0.4, this.size * 0.15, 0, 0, Math.PI * 2);
         ctx.fill();

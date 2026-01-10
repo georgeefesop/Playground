@@ -7,7 +7,7 @@ This document catalogs all colors used throughout the portfolio playground. All 
 ### Black & White
 - **`--color-black`** `#000000` - Primary text, borders, buttons
 - **`--color-white`** `#ffffff` - Backgrounds, text on dark
-- **`--color-dark-text`** `#1a1a1a` - Dark text variant
+- **`--color-dark-text`** `#1a1a1a` - Dark text variant (used in speech bubbles)
 
 ### Grays
 - **`--color-gray-100`** `#fafafa` - Body background
@@ -37,27 +37,20 @@ This document catalogs all colors used throughout the portfolio playground. All 
 
 - **`--color-accent-indigo`** `#6366f1` - Character fallback, hover glow effects
 
-## Shadow & Overlay Colors
+## Shadow & Overlay System
 
-### Shadows
-- **`--color-shadow-light`** `rgba(0, 0, 0, 0.1)` - Light shadows
-- **`--color-shadow-medium`** `rgba(0, 0, 0, 0.15)` - Medium shadows
-- **`--color-shadow-dark`** `rgba(0, 0, 0, 0.2)` - Dark shadows
-- **`--color-shadow-darker`** `rgba(0, 0, 0, 0.3)` - Darker shadows
+### Unified Shadow Scale
+A consolidated shadow system using size-based naming (xs to 2xl):
+
+- **`--color-shadow-xs`** `rgba(0, 0, 0, 0.03)` - Grid lines (lightest)
+- **`--color-shadow-sm`** `rgba(0, 0, 0, 0.08)` - Very light overlays (joystick base)
+- **`--color-shadow-md`** `rgba(0, 0, 0, 0.1)` - Light shadows/overlays (input focus, selection)
+- **`--color-shadow-lg`** `rgba(0, 0, 0, 0.15)` - Medium shadows (project shadows, speech bubbles)
+- **`--color-shadow-xl`** `rgba(0, 0, 0, 0.2)` - Dark shadows (character shadows, most UI elements)
+- **`--color-shadow-2xl`** `rgba(0, 0, 0, 0.3)` - Darker shadows (hover states, buttons)
 
 ### Overlays
-- **`--color-overlay-light`** `rgba(0, 0, 0, 0.08)` - Very light overlay
-- **`--color-overlay-medium`** `rgba(0, 0, 0, 0.1)` - Medium overlay
-- **`--color-overlay-dark`** `rgba(0, 0, 0, 0.5)` - Dark overlay (modals)
-
-### Grid
-- **`--color-grid-line`** `rgba(0, 0, 0, 0.03)` - Grid lines
-
-### Character Shadow
-- **`--color-character-shadow`** `rgba(0, 0, 0, 0.2)` - Character shadow
-
-### Project Shadow
-- **`--color-project-shadow`** `rgba(0, 0, 0, 0.15)` - Project shadow
+- **`--color-overlay`** `rgba(0, 0, 0, 0.5)` - Modal backdrops (semantically different from shadows)
 
 ## Usage Examples
 
@@ -67,14 +60,24 @@ This document catalogs all colors used throughout the portfolio playground. All 
     background: var(--color-white);
     border: 3px solid var(--color-black);
     color: var(--color-dark-text);
-    box-shadow: 4px 4px 0 var(--color-shadow-medium);
+    box-shadow: 4px 4px 0 var(--color-shadow-lg);
+}
+
+.button-hover {
+    background: var(--color-gray-500);
+    box-shadow: 2px 2px 0 var(--color-shadow-2xl);
 }
 ```
 
 ### In JavaScript (Canvas)
 ```javascript
-ctx.fillStyle = '#1a1f2e'; // Use hex directly for canvas
-// Or convert from CSS variable if needed
+// Get CSS variable value
+const getCSSVar = (varName, fallback) => {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+};
+
+ctx.fillStyle = getCSSVar('--color-shadow-xl', 'rgba(0, 0, 0, 0.2)');
+ctx.strokeStyle = getCSSVar('--color-shadow-xs', 'rgba(0, 0, 0, 0.03)');
 ```
 
 ## Color Relationships
@@ -84,6 +87,7 @@ ctx.fillStyle = '#1a1f2e'; // Use hex directly for canvas
 - Secondary: `--color-gray-600`
 - Tertiary: `--color-gray-700`
 - On Dark: `--color-white`
+- Subtle: `--color-dark-text` (for softer contrast)
 
 ### Background Hierarchy
 - Main: `--color-gray-100`
@@ -96,3 +100,19 @@ ctx.fillStyle = '#1a1f2e'; // Use hex directly for canvas
 - Default: `--color-black`
 - Hover: `--color-gray-500`
 - Active: `--color-black` (with transform/shadow change)
+
+### Shadow Usage Guide
+- **xs** (0.03): Grid lines, very subtle elements
+- **sm** (0.08): Light overlays, joystick backgrounds
+- **md** (0.1): Input focus states, selection backgrounds
+- **lg** (0.15): Project shadows, speech bubbles
+- **xl** (0.2): Character shadows, most UI element shadows
+- **2xl** (0.3): Hover states, button pressed effects
+- **overlay** (0.5): Modal backdrops, full-screen overlays
+
+## Design Principles
+
+1. **Consistency**: All shadows use the same black base with varying opacity
+2. **Semantic Naming**: Size-based naming (xs-2xl) makes it easy to choose the right shadow
+3. **Minimal Palette**: Reduced from 9 shadow/overlay variables to 7, eliminating duplicates
+4. **Maintainability**: Single source of truth in CSS custom properties

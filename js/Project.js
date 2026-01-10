@@ -105,7 +105,7 @@ export class Project {
         }
 
         // Shadow
-        ctx.fillStyle = getCSSVar('--color-project-shadow', 'rgba(0, 0, 0, 0.15)');
+        ctx.fillStyle = getCSSVar('--color-shadow-lg', 'rgba(0, 0, 0, 0.15)');
         ctx.beginPath();
         ctx.arc(2, 2, this.size * 0.5 * pulse, 0, Math.PI * 2);
         ctx.fill();
@@ -231,7 +231,7 @@ export class Project {
             background: ${getCSSVar('--color-white', '#fff')};
             padding: 1.5rem;
             border-radius: 0;
-            box-shadow: 6px 6px 0 ${getCSSVar('--color-shadow-dark', 'rgba(0,0,0,0.2)')};
+            box-shadow: 6px 6px 0 ${getCSSVar('--color-shadow-xl', 'rgba(0,0,0,0.2)')};
             border: 3px solid ${getCSSVar('--color-black', '#000')};
             max-width: 500px;
             max-height: 80vh;
@@ -250,7 +250,7 @@ export class Project {
             left: 0;
             width: 100%;
             height: 100%;
-            background: ${getCSSVar('--color-overlay-dark', 'rgba(0,0,0,0.5)')};
+            background: ${getCSSVar('--color-overlay', 'rgba(0,0,0,0.5)')};
             z-index: 999;
         `;
         backdrop.onclick = () => {

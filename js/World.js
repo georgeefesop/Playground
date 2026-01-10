@@ -115,7 +115,7 @@ export class World {
         const endY = camera.y + this.canvas.height;
 
         // Get CSS custom property for grid color
-        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--color-grid-line').trim() || 'rgba(0, 0, 0, 0.03)';
+        const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--color-shadow-xs').trim() || 'rgba(0, 0, 0, 0.03)';
         this.ctx.strokeStyle = gridColor;
         this.ctx.lineWidth = 1;
 

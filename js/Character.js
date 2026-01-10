@@ -50,7 +50,7 @@ export class Character {
         const dy = this.targetY - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > 3) {
+        if (distance > 1) {
             this.isMoving = true;
 
             // Calculate angle and determine direction
@@ -69,28 +69,32 @@ export class Character {
                 this.direction = 3; // Right (row 3)
             }
 
-            // Apply velocity towards target
+            // Move directly towards target - no sliding
             const moveX = (dx / distance) * this.speed;
             const moveY = (dy / distance) * this.speed;
 
-            this.velocityX = moveX;
-            this.velocityY = moveY;
+            // Clamp movement to not overshoot target
+            if (Math.abs(moveX) > Math.abs(dx)) {
+                this.x = this.targetX;
+            } else {
+                this.x += moveX;
+            }
 
-            // Move
-            this.x += this.velocityX;
-            this.y += this.velocityY;
+            if (Math.abs(moveY) > Math.abs(dy)) {
+                this.y = this.targetY;
+            } else {
+                this.y += moveY;
+            }
 
             // Animate walk cycle
             this.walkCycle += this.animationSpeed;
             this.animationFrame = Math.floor(this.walkCycle) % this.framesPerDirection;
         } else {
-            // Apply friction when stopped
-            this.velocityX *= this.friction;
-            this.velocityY *= this.friction;
-
-            if (Math.abs(this.velocityX) < 0.1) this.velocityX = 0;
-            if (Math.abs(this.velocityY) < 0.1) this.velocityY = 0;
-
+            // Stop immediately when close enough
+            this.x = this.targetX;
+            this.y = this.targetY;
+            this.velocityX = 0;
+            this.velocityY = 0;
             this.isMoving = false;
             this.walkCycle = 0;
             this.animationFrame = 1; // Middle frame when idle
@@ -98,11 +102,10 @@ export class Character {
     }
 
     render(ctx, camera) {
-        const screenX = this.x;
-        const screenY = this.y;
-
+        // Character is rendered inside the world transform context
+        // So we use world coordinates directly
         ctx.save();
-        ctx.translate(screenX, screenY);
+        ctx.translate(this.x, this.y);
 
         // Soft shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
@@ -157,9 +160,12 @@ export class Character {
     }
 
     getScreenPosition(camera) {
+        // Calculate screen position - character is rendered in world space
+        // but for UI positioning we need screen coordinates
+        const worldToScreen = camera.worldToScreen(this.x, this.y);
         return {
-            x: this.x - camera.x,
-            y: this.y - camera.y
+            x: worldToScreen.x + camera.width / 2,
+            y: worldToScreen.y + camera.height / 2
         };
     }
 

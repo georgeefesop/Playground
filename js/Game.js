@@ -34,6 +34,15 @@ export class Game {
         this.setupInteraction();
         this.setupSettingsPanel();
 
+        // Spawn character between the two stars
+        // Project 1 is at (300, -200), Project 2 is at (-250, 200)
+        const spawnX = (300 + (-250)) / 2; // 25
+        const spawnY = (-200 + 200) / 2; // 0
+        this.character.x = spawnX;
+        this.character.y = spawnY;
+        this.character.targetX = spawnX;
+        this.character.targetY = spawnY;
+
         // Center camera on character
         this.camera.x = this.character.x - this.camera.width / 2;
         this.camera.y = this.character.y - this.camera.height / 2;
@@ -207,12 +216,6 @@ export class Game {
         speedSlider.addEventListener('input', (e) => {
             const speedMultiplier = parseFloat(e.target.value);
             this.character.setSpeedMultiplier(speedMultiplier);
-        });
-
-        // Grid toggle
-        const gridToggle = document.getElementById('grid-toggle');
-        gridToggle.addEventListener('change', (e) => {
-            this.world.setShowGrid(e.target.checked);
         });
     }
 

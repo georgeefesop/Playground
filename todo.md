@@ -1,5 +1,12 @@
 # TODO List
 
+## Current Tasks
+
+- [x] Fix background rendering issue (top half white, bottom half space background)
+- [x] Fix character sliding/ice movement - stop immediately when target reached
+- [x] Spawn character between the two stars
+- [x] Remove show grid toggle from settings
+
 ## Completed Tasks ✅
 
 - [x] Add Enter/Spacebar to close popups (including welcome message)

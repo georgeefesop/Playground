@@ -30,7 +30,7 @@ export class World {
             this.ctx.fillStyle = '#f8f8f8';
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         } else if (this.currentBackground === 'space') {
-            // Space background
+            // Space background - draw in screen space
             if (!this.backgroundImage || !this.backgroundImage.complete) {
                 if (!this.backgroundImage) {
                     this.backgroundImage = new Image();
@@ -40,22 +40,12 @@ export class World {
                 this.ctx.fillStyle = '#0a0a0f';
                 this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
             } else {
-                // Create pattern
+                // Create pattern and fill entire screen
                 const pattern = this.ctx.createPattern(this.backgroundImage, 'repeat');
                 if (pattern) {
                     this.ctx.fillStyle = pattern;
-                    // Draw background covering visible area plus some buffer
-                    const startX = Math.floor(camera.x / this.backgroundImage.width) * this.backgroundImage.width;
-                    const startY = Math.floor(camera.y / this.backgroundImage.height) * this.backgroundImage.height;
-                    const endX = camera.x + this.canvas.width + this.backgroundImage.width;
-                    const endY = camera.y + this.canvas.height + this.backgroundImage.height;
-
-                    this.ctx.fillRect(
-                        startX - camera.x,
-                        startY - camera.y,
-                        endX - startX,
-                        endY - startY
-                    );
+                    // Fill entire canvas with pattern
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
                 } else {
                     // Fallback
                     this.ctx.fillStyle = '#0a0a0f';
@@ -88,13 +78,13 @@ export class World {
     }
 
     render(camera, character) {
-        // Apply zoom transform
+        // Draw background in screen space (before transform)
+        this.drawBackground(camera);
+
+        // Apply zoom transform for world elements
         this.ctx.save();
         this.ctx.scale(camera.zoom, camera.zoom);
         this.ctx.translate(-camera.x, -camera.y);
-        
-        // Draw background
-        this.drawBackground(camera);
 
         // Draw subtle grid for depth
         if (this.showGrid) {

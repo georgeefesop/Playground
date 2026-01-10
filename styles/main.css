@@ -219,7 +219,7 @@ body {
     right: auto;
     border-top-color: transparent;
     border-bottom-color: #000;
-    transform: translateX(-50%) rotate(0deg);
+    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 #guide-comment[data-indicator-side="top"]::after {
@@ -229,7 +229,7 @@ body {
     right: auto;
     border-top-color: transparent;
     border-bottom-color: white;
-    transform: translateX(-50%) rotate(0deg);
+    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 #guide-comment[data-indicator-side="bottom"]::before {
@@ -239,7 +239,7 @@ body {
     right: auto;
     border-top-color: #000;
     border-bottom-color: transparent;
-    transform: translateX(-50%) rotate(0deg);
+    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 #guide-comment[data-indicator-side="bottom"]::after {
@@ -249,7 +249,7 @@ body {
     right: auto;
     border-top-color: white;
     border-bottom-color: transparent;
-    transform: translateX(-50%) rotate(0deg);
+    transform: translateX(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 #guide-comment[data-indicator-side="left"]::before {
@@ -259,7 +259,7 @@ body {
     bottom: auto;
     border-left-color: transparent;
     border-right-color: #000;
-    transform: translateY(-50%) rotate(0deg);
+    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 #guide-comment[data-indicator-side="left"]::after {
@@ -269,7 +269,7 @@ body {
     bottom: auto;
     border-left-color: transparent;
     border-right-color: white;
-    transform: translateY(-50%) rotate(0deg);
+    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 #guide-comment[data-indicator-side="right"]::before {
@@ -279,7 +279,7 @@ body {
     bottom: auto;
     border-left-color: #000;
     border-right-color: transparent;
-    transform: translateY(-50%) rotate(0deg);
+    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 #guide-comment[data-indicator-side="right"]::after {
@@ -289,7 +289,7 @@ body {
     bottom: auto;
     border-left-color: white;
     border-right-color: transparent;
-    transform: translateY(-50%) rotate(0deg);
+    transform: translateY(-50%) rotate(var(--indicator-angle, 0deg));
 }
 
 /* Message Prompt - Pixel Style */

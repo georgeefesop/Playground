@@ -366,10 +366,12 @@ export class Game {
 
         const dx = charCenterX - bubbleCenterX;
         const dy = charCenterY - bubbleCenterY;
+        const angle = Math.atan2(dy, dx); // Angle from bubble to character in radians
 
         // Determine which side the indicator should be on (closest to character)
         let indicatorSide = 'bottom';
         let indicatorPosition = '50%';
+        let indicatorAngle = 0; // Rotation angle for the indicator
 
         if (Math.abs(dx) > Math.abs(dy)) {
             // Character is more to the left or right
@@ -377,10 +379,14 @@ export class Game {
                 indicatorSide = 'right';
                 const relativeY = ((bubbleCenterY - bubbleY) / bubbleHeight) * 100;
                 indicatorPosition = `${Math.max(10, Math.min(90, relativeY))}%`;
+                // Point indicator towards character (right side, so angle is from right edge)
+                indicatorAngle = (angle - Math.PI / 2) * (180 / Math.PI); // Convert to degrees and adjust
             } else {
                 indicatorSide = 'left';
                 const relativeY = ((bubbleCenterY - bubbleY) / bubbleHeight) * 100;
                 indicatorPosition = `${Math.max(10, Math.min(90, relativeY))}%`;
+                // Point indicator towards character (left side, so angle is from left edge)
+                indicatorAngle = (angle + Math.PI / 2) * (180 / Math.PI); // Convert to degrees and adjust
             }
         } else {
             // Character is more above or below
@@ -388,16 +394,21 @@ export class Game {
                 indicatorSide = 'top';
                 const relativeX = ((bubbleCenterX - bubbleX) / bubbleWidth) * 100;
                 indicatorPosition = `${Math.max(10, Math.min(90, relativeX))}%`;
+                // Point indicator towards character (top side, so angle is from top edge)
+                indicatorAngle = (angle + Math.PI) * (180 / Math.PI); // Convert to degrees and adjust
             } else {
                 indicatorSide = 'bottom';
                 const relativeX = ((bubbleCenterX - bubbleX) / bubbleWidth) * 100;
                 indicatorPosition = `${Math.max(10, Math.min(90, relativeX))}%`;
+                // Point indicator towards character (bottom side, so angle is from bottom edge)
+                indicatorAngle = angle * (180 / Math.PI); // Convert to degrees
             }
         }
 
-        // Set data attribute and CSS variable for indicator positioning
+        // Set data attribute and CSS variables for indicator positioning
         bubble.setAttribute('data-indicator-side', indicatorSide);
         bubble.style.setProperty('--indicator-position', indicatorPosition);
+        bubble.style.setProperty('--indicator-angle', `${indicatorAngle}deg`);
     }
 
     hideThoughtBubble() {

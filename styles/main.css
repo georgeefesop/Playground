@@ -110,6 +110,59 @@ body {
     box-shadow: none;
 }
 
+/* Arrow Keys Display */
+.arrow-keys-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin: 1rem 0;
+}
+
+.arrow-key-row {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+}
+
+.arrow-key {
+    width: 48px;
+    height: 48px;
+    background: #f0f0f0;
+    border: 3px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: #000;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+    image-rendering: crisp-edges;
+    font-family: 'Courier New', 'Consolas', monospace;
+}
+
+.arrow-key:hover {
+    background: #e0e0e0;
+}
+
+.tutorial-hint {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: #666;
+    font-style: italic;
+}
+
+.tutorial-hint kbd {
+    background: #f0f0f0;
+    border: 2px solid #000;
+    padding: 2px 6px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
+    margin: 0 2px;
+}
+
 /* Thought Bubble - Pixel Art Style */
 #guide-comment {
     position: absolute;
@@ -156,6 +209,87 @@ body {
     right: var(--indicator-right, auto);
     bottom: var(--indicator-bottom, -9px);
     left: var(--indicator-left, 16px);
+}
+
+/* Dynamic indicator positioning */
+#guide-comment[data-indicator-side="top"]::before {
+    top: -12px;
+    bottom: auto;
+    left: var(--indicator-position, 50%);
+    right: auto;
+    border-top-color: transparent;
+    border-bottom-color: #000;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+#guide-comment[data-indicator-side="top"]::after {
+    top: -9px;
+    bottom: auto;
+    left: var(--indicator-position, 50%);
+    right: auto;
+    border-top-color: transparent;
+    border-bottom-color: white;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+#guide-comment[data-indicator-side="bottom"]::before {
+    bottom: -12px;
+    top: auto;
+    left: var(--indicator-position, 50%);
+    right: auto;
+    border-top-color: #000;
+    border-bottom-color: transparent;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+#guide-comment[data-indicator-side="bottom"]::after {
+    bottom: -9px;
+    top: auto;
+    left: var(--indicator-position, 50%);
+    right: auto;
+    border-top-color: white;
+    border-bottom-color: transparent;
+    transform: translateX(-50%) rotate(0deg);
+}
+
+#guide-comment[data-indicator-side="left"]::before {
+    left: -12px;
+    right: auto;
+    top: var(--indicator-position, 50%);
+    bottom: auto;
+    border-left-color: transparent;
+    border-right-color: #000;
+    transform: translateY(-50%) rotate(0deg);
+}
+
+#guide-comment[data-indicator-side="left"]::after {
+    left: -9px;
+    right: auto;
+    top: var(--indicator-position, 50%);
+    bottom: auto;
+    border-left-color: transparent;
+    border-right-color: white;
+    transform: translateY(-50%) rotate(0deg);
+}
+
+#guide-comment[data-indicator-side="right"]::before {
+    right: -12px;
+    left: auto;
+    top: var(--indicator-position, 50%);
+    bottom: auto;
+    border-left-color: #000;
+    border-right-color: transparent;
+    transform: translateY(-50%) rotate(0deg);
+}
+
+#guide-comment[data-indicator-side="right"]::after {
+    right: -9px;
+    left: auto;
+    top: var(--indicator-position, 50%);
+    bottom: auto;
+    border-left-color: white;
+    border-right-color: transparent;
+    transform: translateY(-50%) rotate(0deg);
 }
 
 /* Message Prompt - Pixel Style */
@@ -559,18 +693,4 @@ body {
 #settings-toggle-btn:active {
     transform: translate(1px, 1px);
     box-shadow: none;
-}
-
-/* Version Number */
-#version-number {
-    position: fixed;
-    bottom: 1rem;
-    left: 1rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: rgba(0, 0, 0, 0.5);
-    font-family: 'Courier New', 'Consolas', monospace;
-    z-index: 1000;
-    pointer-events: none;
-    user-select: none;
 }

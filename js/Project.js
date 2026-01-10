@@ -57,10 +57,8 @@ export class Project {
     }
 
     render(ctx, camera) {
-        // Use screen coordinates since World.render() already applies camera translation
+        // Only render if on screen (accounting for zoom)
         const screenPos = camera.worldToScreen(this.x, this.y);
-        
-        // Only render if on screen
         if (screenPos.x < -this.size || screenPos.x > camera.width + this.size ||
             screenPos.y < -this.size || screenPos.y > camera.height + this.size) {
             return;
@@ -81,16 +79,16 @@ export class Project {
 
         // Bright glowing gradient radiating from projects when nearby
         if (this.proximityValue > 0.1 && nearColorRgb) {
-            // Limit gradient radius to prevent huge artifacts
-            const maxGradientRadius = 150;
-            const gradientRadius = Math.min(this.boundaryRadius * this.proximityValue, maxGradientRadius);
+            const gradientRadius = this.boundaryRadius * this.proximityValue;
             const emanationGradient = ctx.createRadialGradient(0, 0, this.size * 0.5, 0, 0, gradientRadius);
             
-            // Bright glowing gradient matching the near color
+            // Bright glowing gradient matching the near color - more intense
             const glowIntensity = this.proximityValue;
-            emanationGradient.addColorStop(0, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.4})`);
-            emanationGradient.addColorStop(0.4, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.25})`);
-            emanationGradient.addColorStop(0.7, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.1})`);
+            // Make it brighter and more visible
+            emanationGradient.addColorStop(0, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.8})`);
+            emanationGradient.addColorStop(0.2, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.6})`);
+            emanationGradient.addColorStop(0.4, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.4})`);
+            emanationGradient.addColorStop(0.7, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, ${glowIntensity * 0.2})`);
             emanationGradient.addColorStop(1, `rgba(${nearColorRgb.r}, ${nearColorRgb.g}, ${nearColorRgb.b}, 0)`);
 
             ctx.fillStyle = emanationGradient;
@@ -151,12 +149,40 @@ export class Project {
             ctx.setLineDash([]); // Reset dash
         }
 
-        // Label - Pixel art style
-        ctx.fillStyle = currentColor;
-        ctx.font = 'bold 12px "Courier New", "Consolas", monospace';
+        // Pixel art style nametag
+        ctx.restore();
+        ctx.save();
+        ctx.translate(screenPos.x, screenPos.y);
+        ctx.imageSmoothingEnabled = false;
+
+        // Calculate nametag dimensions
+        ctx.font = 'bold 14px "Courier New", "Consolas", monospace';
+        const textMetrics = ctx.measureText(this.label);
+        const textWidth = textMetrics.width;
+        const textHeight = 16;
+        const padding = 8;
+        const tagWidth = textWidth + padding * 2;
+        const tagHeight = textHeight + padding * 2;
+        const tagY = this.size * 0.5 + 20;
+
+        // Draw nametag background
+        ctx.fillStyle = '#000';
+        ctx.fillRect(-tagWidth / 2 - 1, tagY - 1, tagWidth + 2, tagHeight + 2);
+        
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(-tagWidth / 2, tagY, tagWidth, tagHeight);
+
+        // Draw nametag border (pixel style)
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(-tagWidth / 2, tagY, tagWidth, tagHeight);
+
+        // Draw text
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 14px "Courier New", "Consolas", monospace';
         ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillText(this.label, 0, this.size * 0.5 + 15);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.label, 0, tagY + tagHeight / 2);
 
         ctx.restore();
     }

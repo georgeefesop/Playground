@@ -98,11 +98,11 @@ export class Character {
     }
 
     render(ctx, camera) {
-        // Use screen coordinates since World.render() already applies camera translation
-        const screenPos = camera.worldToScreen(this.x, this.y);
+        const screenX = this.x;
+        const screenY = this.y;
 
         ctx.save();
-        ctx.translate(screenPos.x, screenPos.y);
+        ctx.translate(screenX, screenY);
 
         // Soft shadow
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';

@@ -32,6 +32,12 @@
                     <label>Character Speed</label>
                     <input type="range" id="speed-slider" min="1" max="5" step="0.5" value="1.5">
                 </div>
+                <div class="settings-option">
+                    <div class="settings-toggle">
+                        <input type="checkbox" id="grid-toggle" checked>
+                        <label for="grid-toggle">Show Grid</label>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -39,9 +45,20 @@
         <div id="tutorial" class="ui-panel hidden">
             <div class="tutorial-content">
                 <h2>Welcome to the Playground</h2>
+                <div class="arrow-keys-display">
+                    <div class="arrow-key-row">
+                        <div class="arrow-key">↑</div>
+                    </div>
+                    <div class="arrow-key-row">
+                        <div class="arrow-key">←</div>
+                        <div class="arrow-key">↓</div>
+                        <div class="arrow-key">→</div>
+                    </div>
+                </div>
                 <p id="tutorial-text">Use <span id="controls-hint">arrow keys or WASD</span> to move around.</p>
                 <p>Meet <strong>The Guide</strong> - he'll help you explore.</p>
                 <button id="start-btn">Begin</button>
+                <p class="tutorial-hint">Press <kbd>Enter</kbd> or <kbd>Space</kbd> to start</p>
             </div>
         </div>
 
@@ -59,9 +76,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Version Number -->
-        <div id="version-number">v1.0.16</div>
     </div>
 
     <!-- Scripts -->

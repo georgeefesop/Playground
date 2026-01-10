@@ -39,22 +39,21 @@ export class Game {
         this.camera.y = this.character.y - this.camera.height / 2;
     }
 
-
     setupProjects() {
         const project1 = new Project(300, -200, {
-            label: 'Test Project Alpha',
+            label: 'Experiment Alpha',
             shape: 'circle',
-            color: '#1a1f2e',      // Dark midnight bluish charcoal grey
+            color: '#1a1f2e',      // Dark midnight bluish charcoal grey (dark star)
             colorNear: '#ff4444',  // Glowing red when near
             size: 80,
             boundaryRadius: 250,   // Larger boundary
-            modal: '<h2>Test Project Alpha</h2><p>This is a simple test project to demonstrate the interaction system.</p><p>In a real implementation, this would showcase actual work.</p>'
+            modal: '<h2>Experiment Alpha</h2><p>This is a simple test project to demonstrate the interaction system.</p><p>In a real implementation, this would showcase actual work.</p>'
         });
 
         const project2 = new Project(-250, 200, {
             label: 'Experiment Beta',
             shape: 'circle',
-            color: '#1e2329',      // Dark charcoal grey (slightly different value)
+            color: '#f5f5f5',      // Almost white (light star)
             colorNear: '#ff8844',  // Glowing orange when near
             size: 80,
             boundaryRadius: 250,   // Larger boundary
@@ -75,13 +74,27 @@ export class Game {
             this.startGame();
         });
 
-        // Close tutorial with Enter or Spacebar
+        // Close popups with Enter or Spacebar
         window.addEventListener('keydown', (e) => {
+            // Don't handle if typing in input
+            if (e.target.tagName === 'INPUT' && e.target.id === 'message-input') {
+                if (e.key === 'Enter') {
+                    // Send message on Enter in input
+                    const sendBtn = document.getElementById('message-send-btn');
+                    if (sendBtn) sendBtn.click();
+                } else if (e.key === 'Escape') {
+                    // Close on Escape
+                    this.hideMenu();
+                }
+                return;
+            }
+
             if (e.key === 'Enter' || e.key === ' ') {
                 const tutorial = document.getElementById('tutorial');
                 if (!tutorial.classList.contains('hidden')) {
                     e.preventDefault();
                     this.startGame();
+                    return;
                 }
                 
                 // Close message prompt
@@ -195,14 +208,18 @@ export class Game {
             const speedMultiplier = parseFloat(e.target.value);
             this.character.setSpeedMultiplier(speedMultiplier);
         });
+
+        // Grid toggle
+        const gridToggle = document.getElementById('grid-toggle');
+        gridToggle.addEventListener('change', (e) => {
+            this.world.setShowGrid(e.target.checked);
+        });
     }
 
     setupInteraction() {
         const canvas = this.world.getCanvas();
 
-        // Click handler for character interaction
-        // Note: Input.setupListeners() also registers a click listener for movement.
-        // We use capture phase to intercept character clicks before Input handler processes them.
+        // Click on character to send message
         canvas.addEventListener('click', (e) => {
             const rect = canvas.getBoundingClientRect();
             const screenX = e.clientX - rect.left;
@@ -218,13 +235,12 @@ export class Game {
                 return;
             }
 
-            // Check if clicked on character - if so, show message prompt and prevent movement
+            // Check if clicked on character
             if (this.character.containsPoint(worldPos.x, worldPos.y)) {
-                // Clear the click target in Input to prevent movement
-                this.input.clickTarget = null;
+                e.preventDefault();
                 this.showMessagePrompt();
             }
-        }, true); // Use capture phase to run before Input handler
+        });
 
         // Prevent right-click menu
         canvas.addEventListener('contextmenu', (e) => {
@@ -310,17 +326,75 @@ export class Game {
             return;
         }
 
-        // Position bubble near character - LEFT SIDE
+        // Position bubble near character
         const charScreenPos = this.character.getScreenPosition(this.camera);
         const bubble = document.getElementById('guide-comment');
+        const bubbleWidth = 280;
+        const bubbleHeight = 100; // Approximate
 
         bubble.textContent = this.thoughtBubble.text;
         bubble.classList.remove('hidden');
 
-        // Position above head, slightly to the right
-        bubble.style.left = `${charScreenPos.x + 20}px`; // Slightly right of center
-        bubble.style.top = `${charScreenPos.y - 80}px`; // Above head
-        bubble.style.transform = 'translateX(0)';
+        // Calculate position to keep bubble on screen and above character
+        const offsetX = 20;
+        const offsetY = -80;
+        let bubbleX = charScreenPos.x + offsetX;
+        let bubbleY = charScreenPos.y + offsetY;
+
+        // Keep bubble on screen
+        if (bubbleX + bubbleWidth > this.camera.width) {
+            bubbleX = charScreenPos.x - bubbleWidth - offsetX;
+        }
+        if (bubbleX < 0) {
+            bubbleX = 10;
+        }
+        if (bubbleY < 0) {
+            bubbleY = charScreenPos.y + 60; // Below if no room above
+        }
+
+        bubble.style.left = `${bubbleX}px`;
+        bubble.style.top = `${bubbleY}px`;
+
+        // Calculate angle to character and position indicator
+        const charCenterX = charScreenPos.x;
+        const charCenterY = charScreenPos.y;
+        const bubbleCenterX = bubbleX + bubbleWidth / 2;
+        const bubbleCenterY = bubbleY + bubbleHeight / 2;
+
+        const dx = charCenterX - bubbleCenterX;
+        const dy = charCenterY - bubbleCenterY;
+
+        // Determine which side the indicator should be on (closest to character)
+        let indicatorSide = 'bottom';
+        let indicatorPosition = '50%';
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            // Character is more to the left or right
+            if (dx > 0) {
+                indicatorSide = 'right';
+                const relativeY = ((bubbleCenterY - bubbleY) / bubbleHeight) * 100;
+                indicatorPosition = `${Math.max(10, Math.min(90, relativeY))}%`;
+            } else {
+                indicatorSide = 'left';
+                const relativeY = ((bubbleCenterY - bubbleY) / bubbleHeight) * 100;
+                indicatorPosition = `${Math.max(10, Math.min(90, relativeY))}%`;
+            }
+        } else {
+            // Character is more above or below
+            if (dy > 0) {
+                indicatorSide = 'top';
+                const relativeX = ((bubbleCenterX - bubbleX) / bubbleWidth) * 100;
+                indicatorPosition = `${Math.max(10, Math.min(90, relativeX))}%`;
+            } else {
+                indicatorSide = 'bottom';
+                const relativeX = ((bubbleCenterX - bubbleX) / bubbleWidth) * 100;
+                indicatorPosition = `${Math.max(10, Math.min(90, relativeX))}%`;
+            }
+        }
+
+        // Set data attribute and CSS variable for indicator positioning
+        bubble.setAttribute('data-indicator-side', indicatorSide);
+        bubble.style.setProperty('--indicator-position', indicatorPosition);
     }
 
     hideThoughtBubble() {
@@ -418,22 +492,22 @@ export class Game {
     }
 
     update() {
-        // Handle input
-        const movement = this.input.getMovementVector();
-
-        if (movement.dx !== 0 || movement.dy !== 0) {
-            // Reduced from 200 to 50 for more responsive control
-            this.character.setTarget(
-                this.character.x + movement.dx * 50,
-                this.character.y + movement.dy * 50
-            );
-        }
-
-        // Handle click to move (only if no menu is active)
+        // Disable movement when typing box is open
         if (!this.activeMenu) {
+            // Handle input
+            const movement = this.input.getMovementVector();
+
+            if (movement.dx !== 0 || movement.dy !== 0) {
+                // Reduced from 200 to 50 for more responsive control
+                this.character.setTarget(
+                    this.character.x + movement.dx * 50,
+                    this.character.y + movement.dy * 50
+                );
+            }
+
+            // Handle click to move (only if no menu is active)
             const clickTarget = this.input.consumeClickTarget();
             if (clickTarget) {
-                // Only move if not clicking on character (character clicks are handled in setupInteraction)
                 if (!this.character.containsPoint(clickTarget.x, clickTarget.y)) {
                     this.character.setTarget(clickTarget.x, clickTarget.y);
                 }

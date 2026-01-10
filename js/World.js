@@ -88,12 +88,13 @@ export class World {
     }
 
     render(camera, character) {
-        // Draw background BEFORE camera transform (in screen space)
-        this.drawBackground(camera);
-
-        // Apply camera transform for world elements
+        // Apply zoom transform
         this.ctx.save();
+        this.ctx.scale(camera.zoom, camera.zoom);
         this.ctx.translate(-camera.x, -camera.y);
+        
+        // Draw background
+        this.drawBackground(camera);
 
         // Draw subtle grid for depth
         if (this.showGrid) {
@@ -112,7 +113,6 @@ export class World {
     }
 
     drawGrid(camera) {
-        // Context is already translated by World.render(), so use world coordinates directly
         const gridSize = 100;
         const startX = Math.floor(camera.x / gridSize) * gridSize;
         const startY = Math.floor(camera.y / gridSize) * gridSize;
@@ -122,19 +122,21 @@ export class World {
         this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.03)';
         this.ctx.lineWidth = 1;
 
-        // Vertical lines - use world coordinates directly since context is translated
+        // Vertical lines
         for (let x = startX; x < endX; x += gridSize) {
+            const screenX = x - camera.x;
             this.ctx.beginPath();
-            this.ctx.moveTo(x, startY);
-            this.ctx.lineTo(x, endY);
+            this.ctx.moveTo(screenX, 0);
+            this.ctx.lineTo(screenX, this.canvas.height);
             this.ctx.stroke();
         }
 
-        // Horizontal lines - use world coordinates directly since context is translated
+        // Horizontal lines
         for (let y = startY; y < endY; y += gridSize) {
+            const screenY = y - camera.y;
             this.ctx.beginPath();
-            this.ctx.moveTo(startX, y);
-            this.ctx.lineTo(endX, y);
+            this.ctx.moveTo(0, screenY);
+            this.ctx.lineTo(this.canvas.width, screenY);
             this.ctx.stroke();
         }
     }

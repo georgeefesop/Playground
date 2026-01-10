@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>George Efesopoulos - Portfolio Playground</title>
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <!-- Canvas for the world -->
+    <canvas id="world-canvas"></canvas>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay">
+        <!-- Tutorial/Intro -->
+        <div id="tutorial" class="ui-panel hidden">
+            <div class="tutorial-content">
+                <h2>Welcome to the Playground</h2>
+                <p id="tutorial-text">Use <span id="controls-hint">arrow keys or WASD</span> to move around.</p>
+                <p>Meet <strong>The Guide</strong> - he'll help you explore.</p>
+                <button id="start-btn">Begin</button>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chat-interface" class="hidden">
+            <div id="chat-messages"></div>
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Talk to The Guide...">
+                <button id="voice-btn" title="Voice input">🎤</button>
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+
+        <!-- Floating comment bubble from The Guide -->
+        <div id="guide-comment" class="hidden"></div>
+
+        <!-- Chat toggle button -->
+        <button id="chat-toggle" class="floating-btn" title="Chat with The Guide">
+            💬
+        </button>
+
+        <!-- Info about current project -->
+        <div id="project-info" class="hidden"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>

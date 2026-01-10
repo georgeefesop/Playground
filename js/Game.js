@@ -9,37 +9,54 @@ export class Game {
     constructor() {
         this.world = new World();
         this.camera = new Camera(window.innerWidth, window.innerHeight);
-        this.character = new Character(0, 0); // Start at origin
+        this.character = new Character(0, 0);
         this.input = new Input(this.world.getCanvas(), this.camera);
         this.guide = new Guide();
 
         this.isRunning = false;
-        this.tutorialShown = false;
+
+        // Thought bubble state
+        this.thoughtBubble = {
+            active: false,
+            text: '',
+            timer: 0,
+            duration: 5000
+        };
+
+        // Menu state
+        this.activeMenu = false;
+
+        // Click effects
+        this.clickEffects = [];
 
         this.setupProjects();
         this.setupUI();
-        this.setupChat();
+        this.setupInteraction();
+        this.setupSettingsPanel();
 
-        // Center camera on character initially
+        // Center camera on character
         this.camera.x = this.character.x - this.camera.width / 2;
         this.camera.y = this.character.y - this.camera.height / 2;
     }
 
     setupProjects() {
-        // Add a couple of simple test projects
         const project1 = new Project(300, -200, {
             label: 'Test Project Alpha',
             shape: 'circle',
-            color: '#6366f1',
+            color: '#1a1f2e',      // Dark midnight bluish charcoal grey
+            colorNear: '#ff4444',  // Glowing red when near
             size: 80,
+            boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Test Project Alpha</h2><p>This is a simple test project to demonstrate the interaction system.</p><p>In a real implementation, this would showcase actual work.</p>'
         });
 
         const project2 = new Project(-250, 200, {
             label: 'Experiment Beta',
-            shape: 'square',
-            color: '#ec4899',
-            size: 90,
+            shape: 'circle',
+            color: '#1e2329',      // Dark charcoal grey (slightly different value)
+            colorNear: '#ff8844',  // Glowing orange when near
+            size: 80,
+            boundaryRadius: 250,   // Larger boundary
             modal: '<h2>Experiment Beta</h2><p>Another test project with a different shape and color.</p><p>Each project can have its own unique presentation style.</p>'
         });
 
@@ -48,94 +65,277 @@ export class Game {
     }
 
     setupUI() {
-        // Handle window resize
         window.addEventListener('resize', () => {
             this.camera.resize(window.innerWidth, window.innerHeight);
         });
 
-        // Start button
         const startBtn = document.getElementById('start-btn');
         startBtn.addEventListener('click', () => {
             this.startGame();
         });
+
+        // Close tutorial with Enter or Spacebar
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const tutorial = document.getElementById('tutorial');
+                if (!tutorial.classList.contains('hidden')) {
+                    e.preventDefault();
+                    this.startGame();
+                }
+                
+                // Close message prompt
+                if (this.activeMenu) {
+                    e.preventDefault();
+                    this.hideMenu();
+                }
+            }
+        });
     }
 
-    setupChat() {
-        const chatToggle = document.getElementById('chat-toggle');
-        const chatInterface = document.getElementById('chat-interface');
-        const chatInput = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const voiceBtn = document.getElementById('voice-btn');
+    setupSettingsPanel() {
+        const toggleBtn = document.getElementById('settings-toggle-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        let isOpen = false;
 
-        // Toggle chat
-        chatToggle.addEventListener('click', () => {
-            const isHidden = chatInterface.classList.contains('hidden');
-            if (isHidden) {
-                chatInterface.classList.remove('hidden');
-                chatToggle.style.display = 'none';
-                chatInput.focus();
+        toggleBtn.addEventListener('click', () => {
+            isOpen = !isOpen;
+            if (isOpen) {
+                settingsPanel.classList.remove('hidden');
             } else {
-                chatInterface.classList.add('hidden');
-                chatToggle.style.display = 'block';
+                settingsPanel.classList.add('hidden');
             }
         });
 
-        // Send message
-        const sendMessage = async () => {
-            const message = chatInput.value.trim();
-            if (!message) return;
+        // Background library
+        const backgrounds = [
+            { name: 'Space', image: 'assets/space.png', id: 'space' },
+            { name: 'Grid', image: null, id: 'grid' }
+        ];
 
-            // Clear input
-            chatInput.value = '';
+        const backgroundLibrary = document.getElementById('background-library');
+        backgrounds.forEach(bg => {
+            const item = document.createElement('div');
+            item.className = 'background-item';
+            item.dataset.backgroundId = bg.id;
+            
+            // Create preview tile
+            const preview = document.createElement('div');
+            preview.className = 'background-preview';
+            
+            if (bg.image) {
+                // Image background - create img element
+                const img = document.createElement('img');
+                img.src = bg.image;
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                img.style.imageRendering = 'pixelated';
+                preview.appendChild(img);
+            } else {
+                // Grid background - create canvas to draw grid pattern
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                
+                // Draw grid pattern
+                ctx.fillStyle = '#f8f8f8';
+                ctx.fillRect(0, 0, 64, 64);
+                
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.lineWidth = 1;
+                
+                // Draw grid lines
+                for (let x = 0; x <= 64; x += 8) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, 64);
+                    ctx.stroke();
+                }
+                for (let y = 0; y <= 64; y += 8) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(64, y);
+                    ctx.stroke();
+                }
+                
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                preview.appendChild(canvas);
+            }
+            
+            // Create label
+            const label = document.createElement('div');
+            label.className = 'background-label';
+            label.textContent = bg.name;
+            
+            item.appendChild(preview);
+            item.appendChild(label);
+            
+            if (bg.id === 'space') {
+                item.classList.add('active');
+            }
 
-            // Add user message to chat
-            this.addChatMessage(message, 'user');
+            item.addEventListener('click', () => {
+                // Remove active from all
+                backgroundLibrary.querySelectorAll('.background-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                item.classList.add('active');
+                this.world.setBackground(bg.id, bg.image);
+            });
 
-            // Get nearby projects for context
-            const nearbyProjects = this.getNearbyProjects(150);
+            backgroundLibrary.appendChild(item);
+        });
 
-            // Get response from Guide
-            const response = await this.guide.sendMessage(message, { nearbyProjects });
+        // Speed slider
+        const speedSlider = document.getElementById('speed-slider');
+        speedSlider.addEventListener('input', (e) => {
+            const speedMultiplier = parseFloat(e.target.value);
+            this.character.setSpeedMultiplier(speedMultiplier);
+        });
 
-            // Add guide response to chat
-            this.addChatMessage(response, 'guide');
+        // Grid toggle
+        const gridToggle = document.getElementById('grid-toggle');
+        gridToggle.addEventListener('change', (e) => {
+            this.world.setShowGrid(e.target.checked);
+        });
+    }
+
+    setupInteraction() {
+        const canvas = this.world.getCanvas();
+
+        // Click on character to send message
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.camera.screenToWorld(screenX, screenY);
+
+            // Add click effect
+            this.addClickEffect(worldPos.x, worldPos.y);
+
+            // Close menu if clicking elsewhere
+            if (this.activeMenu) {
+                this.hideMenu();
+                return;
+            }
+
+            // Check if clicked on character
+            if (this.character.containsPoint(worldPos.x, worldPos.y)) {
+                e.preventDefault();
+                this.showMessagePrompt();
+            }
+        });
+
+        // Prevent right-click menu
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+
+        // Mouse hover effect
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            const worldPos = this.camera.screenToWorld(screenX, screenY);
+
+            const isHovered = this.character.containsPoint(worldPos.x, worldPos.y);
+            this.character.setHovered(isHovered);
+            canvas.style.cursor = isHovered ? 'pointer' : 'default';
+        });
+    }
+
+    hideMenu() {
+        this.activeMenu = false;
+        document.getElementById('message-prompt').classList.add('hidden');
+    }
+
+    showMessagePrompt() {
+        this.activeMenu = true;
+
+        const prompt = document.getElementById('message-prompt');
+        const input = document.getElementById('message-input');
+
+        // Position to the right of the character
+        const charScreenPos = this.character.getScreenPosition(this.camera);
+        prompt.style.left = `${charScreenPos.x + 80}px`; // 80px to the right
+        prompt.style.top = `${charScreenPos.y - 60}px`; // Slightly above center
+        prompt.style.transform = 'none';
+
+        prompt.classList.remove('hidden');
+        input.value = '';
+        input.focus();
+
+        const sendBtn = document.getElementById('message-send-btn');
+        const cancelBtn = document.getElementById('message-cancel-btn');
+
+        sendBtn.onclick = async () => {
+            const message = input.value.trim();
+            if (message) {
+                this.hideMenu();
+                this.showThoughtBubble('...');
+
+                const nearbyProjects = this.getNearbyProjects(200);
+                const response = await this.guide.sendMessage(message, { nearbyProjects });
+
+                this.showThoughtBubble(response);
+            }
         };
 
-        sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
+        cancelBtn.onclick = () => {
+            this.hideMenu();
+        };
 
-        // Voice input (simplified - full implementation would use Web Speech API)
-        voiceBtn.addEventListener('click', () => {
-            this.addChatMessage('Voice input coming soon!', 'guide');
-        });
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') {
+                sendBtn.click();
+            }
+        };
     }
 
-    addChatMessage(text, sender) {
-        const messagesContainer = document.getElementById('chat-messages');
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${sender}`;
+    showThoughtBubble(text, duration = 5000) {
+        this.thoughtBubble = {
+            active: true,
+            text,
+            timer: Date.now(),
+            duration
+        };
+    }
 
-        const label = sender === 'user' ? 'You' : 'The Guide';
-        messageDiv.innerHTML = `
-            <div class="label">${label}</div>
-            <div class="bubble">${text}</div>
-        `;
+    updateThoughtBubble() {
+        if (!this.thoughtBubble.active) return;
 
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Check if bubble should expire
+        if (Date.now() - this.thoughtBubble.timer > this.thoughtBubble.duration) {
+            this.thoughtBubble.active = false;
+            return;
+        }
+
+        // Position bubble near character - LEFT SIDE
+        const charScreenPos = this.character.getScreenPosition(this.camera);
+        const bubble = document.getElementById('guide-comment');
+
+        bubble.textContent = this.thoughtBubble.text;
+        bubble.classList.remove('hidden');
+
+        // Position above head, slightly to the right
+        bubble.style.left = `${charScreenPos.x + 20}px`; // Slightly right of center
+        bubble.style.top = `${charScreenPos.y - 80}px`; // Above head
+        bubble.style.transform = 'translateX(0)';
+    }
+
+    hideThoughtBubble() {
+        const bubble = document.getElementById('guide-comment');
+        bubble.classList.add('hidden');
     }
 
     startGame() {
         const tutorial = document.getElementById('tutorial');
         tutorial.classList.add('hidden');
 
-        // Show initial greeting from The Guide
         setTimeout(() => {
-            this.showGuideComment("Welcome! I'm The Guide. Feel free to explore - I'll be here if you need me.");
+            this.showThoughtBubble("Welcome! I'm The Guide. Click on me to chat.");
         }, 500);
 
         this.isRunning = true;
@@ -155,23 +355,6 @@ export class Game {
         tutorial.classList.remove('hidden');
     }
 
-    showGuideComment(text, duration = 5000) {
-        const commentEl = document.getElementById('guide-comment');
-        commentEl.textContent = text;
-        commentEl.classList.remove('hidden');
-
-        // Position above character
-        const charScreenPos = this.camera.worldToScreen(this.character.x, this.character.y);
-        commentEl.style.left = `${charScreenPos.x}px`;
-        commentEl.style.top = `${charScreenPos.y - 80}px`;
-        commentEl.style.transform = 'translateX(-50%)';
-
-        // Hide after duration
-        setTimeout(() => {
-            commentEl.classList.add('hidden');
-        }, duration);
-    }
-
     getNearbyProjects(radius) {
         const projects = this.world.getProjects();
         const charPos = this.character.getPosition();
@@ -181,55 +364,123 @@ export class Game {
         });
     }
 
+    addClickEffect(x, y) {
+        this.clickEffects.push({
+            x,
+            y,
+            timer: 0,
+            duration: 30, // frames (about 0.5 seconds at 60fps)
+            size: 0,
+            maxSize: 40
+        });
+    }
+
+    updateClickEffects() {
+        this.clickEffects = this.clickEffects.filter(effect => {
+            effect.timer += 1; // Increment frame counter
+            const progress = effect.timer / effect.duration;
+            effect.size = progress * effect.maxSize;
+            return effect.timer < effect.duration;
+        });
+    }
+
+    renderClickEffects(ctx, camera) {
+        this.clickEffects.forEach(effect => {
+            const screenX = effect.x - camera.x;
+            const screenY = effect.y - camera.y;
+            const progress = effect.timer / effect.duration;
+            const alpha = 1 - progress;
+
+            ctx.save();
+            ctx.translate(screenX, screenY);
+            ctx.imageSmoothingEnabled = false;
+
+            // Pixel art style click effect - expanding rings
+            const ringCount = 3;
+            for (let i = 0; i < ringCount; i++) {
+                const ringProgress = (progress + i * 0.2) % 1;
+                const ringSize = ringProgress * effect.maxSize;
+                const ringAlpha = alpha * (1 - ringProgress);
+
+                ctx.strokeStyle = `rgba(99, 102, 241, ${ringAlpha})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(0, 0, ringSize, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Inner pixel burst
+                if (ringProgress < 0.3) {
+                    ctx.fillStyle = `rgba(99, 102, 241, ${ringAlpha * 0.8})`;
+                    ctx.fillRect(-2, -2, 4, 4);
+                }
+            }
+
+            ctx.restore();
+        });
+    }
+
     update() {
         // Handle input
         const movement = this.input.getMovementVector();
 
         if (movement.dx !== 0 || movement.dy !== 0) {
-            // Move character based on input
+            // Reduced from 200 to 50 for more responsive control
             this.character.setTarget(
-                this.character.x + movement.dx * 200,
-                this.character.y + movement.dy * 200
+                this.character.x + movement.dx * 50,
+                this.character.y + movement.dy * 50
             );
         }
 
-        // Handle click to move
-        const clickTarget = this.input.consumeClickTarget();
-        if (clickTarget) {
-            this.character.setTarget(clickTarget.x, clickTarget.y);
+        // Handle click to move (only if no menu is active)
+        if (!this.activeMenu) {
+            const clickTarget = this.input.consumeClickTarget();
+            if (clickTarget) {
+                if (!this.character.containsPoint(clickTarget.x, clickTarget.y)) {
+                    this.character.setTarget(clickTarget.x, clickTarget.y);
+                }
+            }
         }
 
         // Update character
         this.character.update();
 
-        // Update camera to follow character
+        // Update camera
         this.camera.follow(this.character);
 
-        // Update projects (check proximity)
+        // Update click effects
+        this.updateClickEffects();
+
+        // Update thought bubble
+        if (this.thoughtBubble.active) {
+            this.updateThoughtBubble();
+        } else {
+            this.hideThoughtBubble();
+        }
+
+        // Update projects
         const nearbyProjects = this.getNearbyProjects(150);
         const charPos = this.character.getPosition();
 
         this.world.getProjects().forEach(project => {
-            const isNearby = project.distanceTo(charPos.x, charPos.y) < 150;
-            project.update(isNearby);
+            const distance = project.distanceTo(charPos.x, charPos.y);
+            const isNearby = distance < 150;
+            project.update(isNearby, distance);
 
-            // Check for interaction (spacebar or Enter when near)
+            // Check for interaction
             if (isNearby && (this.input.keys[' '] || this.input.keys['enter'])) {
                 project.interact();
-                // Reset keys to prevent repeated triggers
                 this.input.keys[' '] = false;
                 this.input.keys['enter'] = false;
             }
         });
 
-        // Generate contextual comments from The Guide
-        if (nearbyProjects.length > 0 && !this.character.isMoving) {
-            // Occasionally comment on nearby projects
-            if (Math.random() < 0.01) { // 1% chance per frame when stationary
+        // Occasional contextual comments - increased frequency
+        if (nearbyProjects.length > 0 && !this.thoughtBubble.active) {
+            if (Math.random() < 0.008) { // ~1 every 2-3 seconds when near projects
                 const randomProject = nearbyProjects[Math.floor(Math.random() * nearbyProjects.length)];
                 this.guide.generateContextComment(randomProject, charPos).then(comment => {
                     if (comment) {
-                        this.showGuideComment(comment);
+                        this.showThoughtBubble(comment, 4000);
                     }
                 });
             }
@@ -238,6 +489,9 @@ export class Game {
 
     render() {
         this.world.render(this.camera, this.character);
+        // Render click effects on top
+        const ctx = this.world.getCanvas().getContext('2d');
+        this.renderClickEffects(ctx, this.camera);
     }
 
     gameLoop() {
@@ -250,7 +504,6 @@ export class Game {
     }
 
     start() {
-        // Show tutorial first
         this.showTutorial();
     }
 }

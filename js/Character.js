@@ -160,13 +160,9 @@ export class Character {
     }
 
     getScreenPosition(camera) {
-        // Calculate screen position - character is rendered in world space
-        // but for UI positioning we need screen coordinates
-        const worldToScreen = camera.worldToScreen(this.x, this.y);
-        return {
-            x: worldToScreen.x + camera.width / 2,
-            y: worldToScreen.y + camera.height / 2
-        };
+        // Calculate screen position - worldToScreen already accounts for camera position
+        // When camera is centered on character, this returns approximately (width/2, height/2)
+        return camera.worldToScreen(this.x, this.y);
     }
 
     containsPoint(x, y) {

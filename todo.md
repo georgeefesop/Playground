@@ -2,7 +2,7 @@
 
 ## Current Tasks
 
-- [ ] Fix stars appearing off-screen - projects using wrong coordinate system
+- [ ] Fix speech bubble positioning - appears in bottom right corner
 
 ## Completed Tasks ✅
 

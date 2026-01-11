@@ -9,6 +9,8 @@ export class Input {
         // Mouse/Touch
         this.clickTarget = null;
         this.isTouchDevice = 'ontouchstart' in window;
+        this.mouseWorldPos = { x: 0, y: 0 };
+        this.mouseHasMoved = false; // Track if mouse has moved over canvas
 
         // Virtual joystick for mobile
         this.joystick = {
@@ -46,6 +48,24 @@ export class Input {
 
             const worldPos = this.camera.screenToWorld(screenX, screenY);
             this.clickTarget = worldPos;
+        });
+
+        // Track mouse position for follow mode
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            this.mouseWorldPos = this.camera.screenToWorld(screenX, screenY);
+            this.mouseHasMoved = true;
+        });
+
+        // Initialize mouse position when mouse enters canvas
+        this.canvas.addEventListener('mouseenter', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            const screenX = e.clientX - rect.left;
+            const screenY = e.clientY - rect.top;
+            this.mouseWorldPos = this.camera.screenToWorld(screenX, screenY);
+            this.mouseHasMoved = true;
         });
 
         // Touch controls
@@ -119,6 +139,12 @@ export class Input {
     }
 
     getMovementVector() {
+        // Don't process movement if user is typing in an input or textarea
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+            return { dx: 0, dy: 0 };
+        }
+
         let dx = 0;
         let dy = 0;
 
@@ -152,5 +178,9 @@ export class Input {
 
     isTouchEnabled() {
         return this.isTouchDevice;
+    }
+
+    getMouseWorldPosition() {
+        return this.mouseWorldPos;
     }
 }

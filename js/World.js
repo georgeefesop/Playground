@@ -24,7 +24,10 @@ export class World {
         this.canvas.height = window.innerHeight;
     }
 
-    drawBackground(camera) {
+    drawBackground(camera, dimFactor = 0, targetCtx = null, targetCanvas = null) {
+        const ctx = targetCtx || this.ctx;
+        const canvas = targetCanvas || this.canvas;
+        
         // Get CSS custom property values
         const getCSSVar = (varName) => {
             return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
@@ -32,8 +35,8 @@ export class World {
 
         if (this.currentBackground === 'grid') {
             // Grid background (default light)
-            this.ctx.fillStyle = getCSSVar('--color-gray-200') || '#f8f8f8';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            ctx.fillStyle = getCSSVar('--color-gray-200') || '#f8f8f8';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
         } else if (this.currentBackground === 'space') {
             // Space background - draw in screen space
             if (!this.backgroundImage || !this.backgroundImage.complete) {
@@ -42,25 +45,34 @@ export class World {
                     this.backgroundImage.src = 'assets/space.png';
                 }
                 // Fallback while loading
-                this.ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
-                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
             } else {
                 // Create pattern and fill entire screen
-                const pattern = this.ctx.createPattern(this.backgroundImage, 'repeat');
+                const pattern = ctx.createPattern(this.backgroundImage, 'repeat');
                 if (pattern) {
-                    this.ctx.fillStyle = pattern;
+                    ctx.fillStyle = pattern;
                     // Fill entire canvas with pattern
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                 } else {
                     // Fallback
-                    this.ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
-                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                    ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
             }
         } else {
             // Default fallback
-            this.ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
-            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Apply dimming overlay based on star proximity (dimFactor: 0 = no dim, 1 = fully dimmed)
+        if (dimFactor > 0) {
+            // Draw a dark overlay that increases opacity as dimFactor increases
+            // dimFactor of 1.0 = 35% opacity dark overlay (reduced by 50% from original 70%)
+            const overlayOpacity = dimFactor * 0.35;
+            ctx.fillStyle = `rgba(0, 0, 0, ${overlayOpacity})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
     }
 
@@ -82,61 +94,70 @@ export class World {
         this.showGrid = show;
     }
 
-    render(camera, character) {
+    render(camera, character, dimFactor = 0, renderCharacter = true, renderGrid = true, targetCtx = null, targetCanvas = null) {
+        const ctx = targetCtx || this.ctx;
+        const canvas = targetCanvas || this.canvas;
+        
         // Draw background in screen space (before transform)
-        this.drawBackground(camera);
+        this.drawBackground(camera, dimFactor, targetCtx, targetCanvas);
 
         // Apply zoom transform for world elements
-        this.ctx.save();
-        this.ctx.scale(camera.zoom, camera.zoom);
-        this.ctx.translate(-camera.x, -camera.y);
+        ctx.save();
+        ctx.scale(camera.zoom, camera.zoom);
+        ctx.translate(-camera.x, -camera.y);
 
         // Draw subtle grid for depth
-        if (this.showGrid) {
-            this.drawGrid(camera);
+        if (this.showGrid && renderGrid) {
+            this.drawGrid(camera, targetCtx, targetCanvas);
         }
 
         // Draw projects
         this.projects.forEach(project => {
-            project.render(this.ctx, camera);
+            project.render(ctx, camera);
         });
 
         // Draw character
-        character.render(this.ctx, camera);
+        if (renderCharacter && character) {
+            character.render(ctx, camera);
+        }
         
-        this.ctx.restore();
+        ctx.restore();
     }
 
-    drawGrid(camera) {
+    drawGrid(camera, targetCtx = null, targetCanvas = null) {
+        const ctx = targetCtx || this.ctx;
+        const canvas = targetCanvas || this.canvas;
+        
         const gridSize = 100;
         const startX = Math.floor(camera.x / gridSize) * gridSize;
         const startY = Math.floor(camera.y / gridSize) * gridSize;
-        const endX = camera.x + this.canvas.width;
-        const endY = camera.y + this.canvas.height;
+        const endX = camera.x + canvas.width;
+        const endY = camera.y + canvas.height;
 
         // Get CSS custom property for grid color
         const gridColor = getComputedStyle(document.documentElement).getPropertyValue('--color-shadow-xs').trim() || 'rgba(0, 0, 0, 0.03)';
-        this.ctx.strokeStyle = gridColor;
-        this.ctx.lineWidth = 1;
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
 
         // Vertical lines
         for (let x = startX; x < endX; x += gridSize) {
             const screenX = x - camera.x;
-            this.ctx.beginPath();
-            this.ctx.moveTo(screenX, 0);
-            this.ctx.lineTo(screenX, this.canvas.height);
-            this.ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(screenX, 0);
+            ctx.lineTo(screenX, canvas.height);
+            ctx.stroke();
         }
 
         // Horizontal lines
         for (let y = startY; y < endY; y += gridSize) {
             const screenY = y - camera.y;
-            this.ctx.beginPath();
-            this.ctx.moveTo(0, screenY);
-            this.ctx.lineTo(this.canvas.width, screenY);
-            this.ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, screenY);
+            ctx.lineTo(canvas.width, screenY);
+            ctx.stroke();
         }
     }
+
 
     getCanvas() {
         return this.canvas;

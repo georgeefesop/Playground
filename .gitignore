@@ -30,3 +30,6 @@ logs
 
 # OS
 Thumbs.db
+
+# MCP Configuration (contains API tokens)
+.cursor/mcp.json

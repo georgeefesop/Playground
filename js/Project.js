@@ -187,6 +187,10 @@ export class Project {
             screenPos.y < -maxRenderRadius || screenPos.y > camera.height + maxRenderRadius) {
             return;
         }
+        
+        // On mobile, ensure stars have minimum visibility so effects are always visible
+        const isMobile = window.innerWidth <= 768;
+        const effectiveProximityValue = isMobile ? Math.max(this.proximityValue, 0.15) : this.proximityValue;
 
         // Cache time-based calculations once per frame
         const now = Date.now();
@@ -290,9 +294,9 @@ export class Project {
         
         if (this.proximityValue > 0.1 && glowColorRgb) {
             // 1. Outer Halo - largest, faintest glow - uses glowColor and glowSize
-            const outerHaloRadius = this.boundaryRadius * this.proximityValue * 0.5 * this.glowSize; // Apply glowSize multiplier
+            const outerHaloRadius = this.boundaryRadius * effectiveProximityValue * 0.5 * this.glowSize; // Apply glowSize multiplier
             const outerHaloGradient = ctx.createRadialGradient(0, 0, this.size * 0.5, 0, 0, outerHaloRadius);
-            const outerHaloIntensity = this.proximityValue * glowPulse * 0.2 * this.glowIntensity * this.glowOpacity; // Apply glowOpacity multiplier
+            const outerHaloIntensity = effectiveProximityValue * glowPulse * 0.2 * this.glowIntensity * this.glowOpacity; // Apply glowOpacity multiplier
             outerHaloGradient.addColorStop(0, `rgba(${glowColorRgb.r}, ${glowColorRgb.g}, ${glowColorRgb.b}, ${outerHaloIntensity * 0.4})`);
             outerHaloGradient.addColorStop(0.3, `rgba(${glowColorRgb.r}, ${glowColorRgb.g}, ${glowColorRgb.b}, ${outerHaloIntensity * 0.2})`);
             outerHaloGradient.addColorStop(0.7, `rgba(${glowColorRgb.r}, ${glowColorRgb.g}, ${glowColorRgb.b}, ${outerHaloIntensity * 0.1})`);
@@ -318,12 +322,12 @@ export class Project {
         }
 
         // ===== STAR RAYS/POINTS =====
-        if (this.proximityValue > 0.1) {
+        if (effectiveProximityValue > 0.1) {
             const rotation = timeBase5 + this.pulseOffset; // Very slow rotation to prevent jolting
             const numRays = this.spokeCount;
             const rayBaseLength = this.size * this.spokeMinLength;
             const rayMaxLength = this.size * this.spokeMaxLength;
-            const baseRayLength = rayBaseLength + (rayMaxLength - rayBaseLength) * this.proximityValue;
+            const baseRayLength = rayBaseLength + (rayMaxLength - rayBaseLength) * effectiveProximityValue;
             
             // Calculate base width - allow for overlap between spokes
             const baseWidth = (Math.PI * 2 * this.size * this.spokeStartRadius) / numRays * this.spokeBaseWidth1;
@@ -335,7 +339,7 @@ export class Project {
             // Cache RGB values
             const base1Rgb = this.hexToRgb(this.colorBase1);
             const tip1Rgb = this.hexToRgb(this.colorTip1);
-            const rayOpacity = this.proximityValue * 1.0; // Full opacity multiplier for maximum intensity
+            const rayOpacity = effectiveProximityValue * 1.0; // Full opacity multiplier for maximum intensity
             const startRadius = this.size * this.spokeStartRadius;
             
             ctx.save();
@@ -435,13 +439,13 @@ export class Project {
         }
 
         // ===== SECOND LAYER OF SPOKES (Lighter, Brighter, Thinner) =====
-        if (this.proximityValue > 0.1) {
+        if (effectiveProximityValue > 0.1) {
             const numRays = this.spokeCount;
             const rotationOffset = (Math.PI * 2 / numRays) * this.spokeRotationOffset; // Configurable offset in radians
             const rotation = timeBase5 + this.pulseOffset + rotationOffset; // Very slow rotation to prevent jolting
             const rayBaseLength = this.size * this.spokeMinLength;
             const rayMaxLength = this.size * this.spokeMaxLength;
-            const baseRayLength = rayBaseLength + (rayMaxLength - rayBaseLength) * this.proximityValue;
+            const baseRayLength = rayBaseLength + (rayMaxLength - rayBaseLength) * effectiveProximityValue;
             
             // Thinner base width for second layer but still with overlap
             const baseWidth = (Math.PI * 2 * this.size * this.spokeStartRadius) / numRays * this.spokeBaseWidth2;
@@ -453,7 +457,7 @@ export class Project {
             // Cache RGB values and opacity
             const base2Rgb = this.hexToRgb(this.colorBase2);
             const tip2Rgb = this.hexToRgb(this.colorTip2);
-            const rayOpacity = this.proximityValue * 1.0; // Full opacity for brightness
+            const rayOpacity = effectiveProximityValue * 1.0; // Full opacity for brightness
             const startRadius = this.size * this.spokeStartRadius;
             
             ctx.save();
@@ -590,7 +594,7 @@ export class Project {
         ctx.shadowOffsetY = savedShadowOffsetY4;
 
         // Glow effect when nearby
-        if (this.proximityValue > 0.3) {
+        if (effectiveProximityValue > 0.3) {
             // Preserve main shadow, add glow blur
             const savedShadowBlur5 = ctx.shadowBlur;
             const savedShadowColor5 = ctx.shadowColor;
@@ -602,7 +606,7 @@ export class Project {
             ctx.shadowOffsetY = 0;
             ctx.strokeStyle = currentColor;
             ctx.lineWidth = 3;
-            ctx.globalAlpha = this.proximityValue * 0.5;
+            ctx.globalAlpha = effectiveProximityValue * 0.5;
             ctx.beginPath();
             ctx.arc(0, 0, (this.size * 0.5 + 8) * pulse, 0, Math.PI * 2);
             ctx.stroke();

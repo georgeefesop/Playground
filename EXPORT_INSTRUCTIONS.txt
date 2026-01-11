@@ -1,0 +1,5 @@
+To export your presets:
+1. Open export-presets.html in your browser (double-click the file)
+2. The presets will auto-export from localStorage
+3. Copy the JSON from the textarea
+4. Send it to be added to data/default-presets.json

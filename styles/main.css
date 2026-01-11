@@ -664,22 +664,36 @@ body {
     #settings-toggle-btn,
     #star-controls-toggle-btn,
     #activate-all-stars-ui-btn {
-        position: fixed;
-        top: 0.5rem;
-        right: auto;
+        position: fixed !important;
+        top: 0.5rem !important;
+        right: auto !important;
+        bottom: auto !important;
         display: inline-flex;
+        width: auto;
+        min-width: auto;
+        max-width: none;
     }
     
     #settings-toggle-btn {
-        left: 0.5rem;
+        left: 0.5rem !important;
     }
     
     #star-controls-toggle-btn {
-        left: calc(0.5rem + 60px + 0.5rem); /* After settings button */
+        left: calc(0.5rem + 50px + 0.5rem) !important; /* After settings button (adjusted width) */
     }
     
     #activate-all-stars-ui-btn {
-        left: calc(0.5rem + 120px + 1rem); /* After star controls button */
+        left: calc(0.5rem + 50px + 0.5rem + 50px + 0.5rem) !important; /* After star controls button */
+    }
+
+    /* Move zoom slider above logo on left side on mobile */
+    #zoom-control {
+        position: fixed !important;
+        bottom: calc(1rem + 1.5rem) !important; /* Above logo (logo is at bottom: 1rem, logo height ~1.5rem) */
+        left: 1rem !important;
+        right: auto !important;
+        width: auto;
+        max-width: 200px;
     }
 }
 
@@ -881,10 +895,34 @@ body {
 }
 
 #star-controls-panel button,
-#star-controls-panel input,
 #star-controls-panel select,
 #star-controls-panel label {
     cursor: default;
+}
+
+/* Ensure sliders have proper pointer events and cursor styles */
+#star-controls-panel input[type="range"] {
+    cursor: pointer !important;
+    pointer-events: auto !important;
+    z-index: 10;
+}
+
+#star-controls-panel input[type="range"]::-webkit-slider-thumb {
+    cursor: grab !important;
+    pointer-events: auto !important;
+}
+
+#star-controls-panel input[type="range"]::-webkit-slider-thumb:active {
+    cursor: grabbing !important;
+}
+
+#star-controls-panel input[type="range"]::-moz-range-thumb {
+    cursor: grab !important;
+    pointer-events: auto !important;
+}
+
+#star-controls-panel input[type="range"]::-moz-range-thumb:active {
+    cursor: grabbing !important;
 }
 
 /* Scrollable content area - starts below title bar, ends above resize handle */
@@ -919,14 +957,52 @@ body {
         min-width: 280px;
         max-width: 320px;
     }
-    
+
     #star-controls-panel .star-controls-grid {
         grid-template-columns: 1fr;
     }
-    
+
     #star-controls-panel .star-controls-full-width {
         grid-column: 1;
     }
+}
+
+/* Collapsed single-column mode */
+#star-controls-panel.collapsed .star-controls-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+}
+
+#star-controls-panel.collapsed {
+    min-width: 280px;
+    max-width: 320px;
+}
+
+/* Sticky panel states */
+#star-controls-panel.sticky-left {
+    position: fixed !important;
+    left: 0 !important;
+    right: auto !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+}
+
+#star-controls-panel.sticky-right {
+    position: fixed !important;
+    right: 0 !important;
+    left: auto !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
 }
 
 /* Mobile: star controls panel takes up bottom half of screen */
@@ -2110,6 +2186,35 @@ input[type="color"]::-moz-color-swatch {
 
 #activate-all-stars-ui-btn.active:hover {
     background: var(--color-blue-400);
+}
+
+/* Floating Modify Button */
+.floating-modify-btn {
+    position: fixed;
+    z-index: 1003; /* Above star controls panel */
+    padding: 0.75rem 1.5rem;
+    background: var(--color-blue-500);
+    color: var(--color-offwhite-50);
+    border: 2px solid var(--color-blue-400);
+    border-radius: 4px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    font-weight: 700;
+    font-size: 0.875rem;
+    cursor: pointer;
+    box-shadow: 4px 4px 0 var(--color-shadow-xl);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: auto;
+}
+
+.floating-modify-btn:hover {
+    background: var(--color-blue-400);
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 var(--color-shadow-xl);
+}
+
+.floating-modify-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
 }
 
 /* Logo - Rusty Orange Style */

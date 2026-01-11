@@ -94,7 +94,7 @@ export class World {
         this.showGrid = show;
     }
 
-    render(camera, character, dimFactor = 0, renderCharacter = true, renderGrid = true, targetCtx = null, targetCanvas = null) {
+    render(camera, character, dimFactor = 0, renderCharacter = true, renderGrid = true, targetCtx = null, targetCanvas = null, renderNametags = true) {
         const ctx = targetCtx || this.ctx;
         const canvas = targetCanvas || this.canvas;
         
@@ -113,7 +113,7 @@ export class World {
 
         // Draw projects
         this.projects.forEach(project => {
-            project.render(ctx, camera);
+            project.render(ctx, camera, renderNametags);
         });
 
         // Draw character

@@ -28,6 +28,9 @@
         <!-- Activate All Stars Button (UI Overlay) -->
         <button id="activate-all-stars-ui-btn">⭐ Activate All Stars</button>
 
+        <!-- Floating Modify Button (appears near stars) -->
+        <button id="modify-star-btn" class="hidden floating-modify-btn">Modify</button>
+
         <!-- Settings Panel -->
         <div id="settings-panel" class="hidden">
             <div class="menu-title-bar">
@@ -91,6 +94,18 @@
                 </div>
                 <p id="tutorial-text" style="margin-top: 1rem; text-align: center; color: var(--color-offwhite-200); font-size: 0.75rem; line-height: 1.6;">Use <span id="controls-hint">arrow keys or WASD</span> to move around, or <span class="click-hint">click to move</span>.</p>
                 <p style="margin-top: 0.75rem; text-align: center; color: var(--color-offwhite-200); font-size: 0.75rem; line-height: 1.6;">Meet <strong>The Guide</strong> - he'll help you explore.</p>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Presets</div>
+                <div class="settings-option">
+                    <button id="export-presets-btn" style="width: 100%; padding: 0.75rem; font-family: 'Courier New', 'Consolas', monospace; font-weight: 700; background: var(--color-blue-500); color: var(--color-offwhite-50); border: 2px solid var(--color-blue-400); cursor: pointer; border-radius: 4px;">
+                        📥 Export Presets
+                    </button>
+                    <p style="font-size: 0.75rem; color: var(--color-offwhite-300); margin-top: 0.5rem; text-align: center;">
+                        Download all presets as JSON file
+                    </p>
+                </div>
             </div>
         </div>
 

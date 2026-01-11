@@ -57,6 +57,10 @@ export class Game {
         this.panelTargetY = null;
         this.panelCurrentY = null;
         this.panelPositionRafId = null;
+        
+        // Track modify button state
+        this.modifyButtonVisible = false;
+        this.currentNearbyStar = null; // Track which star we're near
         // Animation state for activate all stars transition
         this.starsActivationAnimating = false;
         this.starsActivationStartTime = null;
@@ -445,6 +449,15 @@ export class Game {
             isOpen = false;
         });
 
+        // Export presets button
+        const exportPresetsBtn = document.getElementById('export-presets-btn');
+        if (exportPresetsBtn) {
+            exportPresetsBtn.addEventListener('click', () => {
+                this.playHapticSound('click');
+                this.exportPresetsToFile();
+            });
+        }
+
         // Background library
         const backgrounds = [
             { name: 'Space', image: 'assets/space.png', id: 'space' },
@@ -632,8 +645,20 @@ export class Game {
         
         // Position panel sticky to right side of screen
         const positionPanelNearStar = () => {
-            // Don't reposition if manually positioned (dragged) or currently dragging
-            if (panel.dataset.dragging === 'true' || this.starControlsManuallyPositioned) return;
+            // On mobile, let CSS handle positioning (bottom: 0)
+            if (this.input.isTouchDevice) {
+                // Reset any JavaScript-set positioning to let CSS take over
+                panel.style.top = 'auto';
+                panel.style.bottom = '0';
+                panel.style.left = '0';
+                panel.style.right = '0';
+                panel.style.transform = 'none';
+                panel.style.position = 'fixed';
+                return;
+            }
+            
+            // Don't reposition if sticky, manually positioned (dragged) or currently dragging
+            if (panel.dataset.sticky || panel.dataset.dragging === 'true' || this.starControlsManuallyPositioned) return;
             
             // Always position on right side, vertically centered
             const rightOffset = 16; // Small offset from right edge (1rem = 16px)
@@ -759,6 +784,39 @@ export class Game {
             this.starControlsManuallyPositioned = false; // Reset manual positioning
             this.starControlsManuallyOpened = false; // Reset manual open flag
         });
+
+        // Modify button click handler
+        const modifyBtn = document.getElementById('modify-star-btn');
+        if (modifyBtn) {
+            modifyBtn.addEventListener('click', () => {
+                this.playHapticSound('click');
+                // Open star controls panel
+                if (panel && this.currentNearbyStar) {
+                    // Set current star in selector
+                    const starIndex = this.world.getProjects().indexOf(this.currentNearbyStar);
+                    if (starSelector && starIndex !== -1) {
+                        starSelector.value = starIndex.toString();
+                        // Update save button state
+                        if (this.updateSaveButtonState) {
+                            this.updateSaveButtonState();
+                        }
+                    }
+                    // Update all controls to match the star's current values
+                    if (this.updateControlsFromProject) {
+                        this.updateControlsFromProject(this.currentNearbyStar);
+                    }
+                    // Open panel
+                    panel.classList.remove('hidden');
+                    this.starControlsManuallyOpened = true;
+                    // Position panel on right side
+                    if (this.positionStarControlsPanel) {
+                        setTimeout(() => this.positionStarControlsPanel(), 0);
+                    }
+                    // Hide modify button
+                    this.hideModifyButton();
+                }
+            });
+        }
         
         // Update position and controls when star selection changes
         starSelector.addEventListener('change', () => {
@@ -1803,6 +1861,44 @@ export class Game {
         return json;
     }
 
+    exportPresetsToFile() {
+        try {
+            const presets = this.getAllPresets();
+            
+            if (presets.length === 0) {
+                alert('No presets to export. Save some presets first!');
+                return;
+            }
+            
+            // Format JSON with indentation
+            const json = JSON.stringify(presets, null, 2);
+            
+            // Create blob and download
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // Create filename with timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+            const filename = `star-presets-${timestamp}.json`;
+            
+            // Create temporary download link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            console.log(`Exported ${presets.length} preset(s) to ${filename}`);
+        } catch (e) {
+            console.error('Error exporting presets to file:', e);
+            alert('Error exporting presets. Check console for details.');
+        }
+    }
+
     savePreset(name, project) {
         if (!name || !name.trim()) {
             console.error('savePreset: Invalid name');
@@ -2844,9 +2940,15 @@ export class Game {
         };
 
         handle.addEventListener('mousedown', (e) => {
-            // Check if the clicked element is the close button
-            if (e.target.classList.contains('menu-close-btn')) {
-                return; // Don't drag when clicking close button
+            // Don't drag if clicking on interactive elements (inputs, buttons, etc.)
+            if (e.target.tagName === 'INPUT' || 
+                e.target.tagName === 'BUTTON' || 
+                e.target.tagName === 'SELECT' ||
+                e.target.closest('input') ||
+                e.target.closest('button') ||
+                e.target.closest('select') ||
+                e.target.classList.contains('menu-close-btn')) {
+                return; // Let the element handle its own events
             }
             
             // Set dragging flag IMMEDIATELY to prevent positioning interference
@@ -2857,9 +2959,15 @@ export class Game {
 
         // Add touch event support for mobile
         handle.addEventListener('touchstart', (e) => {
-            // Check if the touched element is the close button
-            if (e.target.classList.contains('menu-close-btn')) {
-                return; // Don't drag when touching close button
+            // Don't drag if touching interactive elements (inputs, buttons, etc.)
+            if (e.target.tagName === 'INPUT' || 
+                e.target.tagName === 'BUTTON' || 
+                e.target.tagName === 'SELECT' ||
+                e.target.closest('input') ||
+                e.target.closest('button') ||
+                e.target.closest('select') ||
+                e.target.classList.contains('menu-close-btn')) {
+                return; // Let the element handle its own events
             }
             
             // Set dragging flag IMMEDIATELY to prevent positioning interference
@@ -2869,6 +2977,15 @@ export class Game {
             startDrag(touch.clientX, touch.clientY);
             e.preventDefault(); // Prevent scrolling
         });
+
+        const checkCollapse = () => {
+            const rect = element.getBoundingClientRect();
+            if (rect.width < 400) {
+                element.classList.add('collapsed');
+            } else {
+                element.classList.remove('collapsed');
+            }
+        };
 
         const handleMove = (clientX, clientY) => {
             if (isDragging) {
@@ -2881,6 +2998,11 @@ export class Game {
                 element.style.left = `${currentX}px`;
                 element.style.top = `${currentY}px`;
                 element.style.transform = 'none'; // Remove centering transform when dragging
+                
+                // Check collapse state while dragging (for star controls panel)
+                if (element.id === 'star-controls-panel') {
+                    checkCollapse();
+                }
             }
         };
 
@@ -2906,6 +3028,32 @@ export class Game {
                 // Mark panel as manually positioned
                 if (element.id === 'star-controls-panel') {
                     this.starControlsManuallyPositioned = true;
+                    // Check if panel should be collapsed
+                    checkCollapse();
+                    
+                    // Check if near screen edges for sticky snapping
+                    const rect = element.getBoundingClientRect();
+                    const edgeThreshold = 50; // pixels from edge
+                    
+                    // Check left edge
+                    if (rect.left < edgeThreshold) {
+                        element.style.left = '0';
+                        element.style.right = 'auto';
+                        element.classList.add('sticky-left');
+                        element.dataset.sticky = 'left';
+                    }
+                    // Check right edge
+                    else if (rect.right > window.innerWidth - edgeThreshold) {
+                        element.style.right = '0';
+                        element.style.left = 'auto';
+                        element.classList.add('sticky-right');
+                        element.dataset.sticky = 'right';
+                    }
+                    // Not near edge - remove sticky
+                    else {
+                        element.classList.remove('sticky-left', 'sticky-right');
+                        element.dataset.sticky = '';
+                    }
                 }
             }
         };
@@ -3359,7 +3507,17 @@ export class Game {
         this.character.update();
 
         // Update camera
-        this.camera.follow(this.character);
+        // On mobile, always center character. On desktop, use deadzone
+        if (this.input.isTouchDevice) {
+            // Mobile: center character (no deadzone)
+            this.camera.follow(this.character, false);
+        } else {
+            // Desktop: use deadzone (character can move in center, camera moves when near edges)
+            // Deadzone is 60% of screen width and height
+            const deadzoneWidth = this.camera.width * 0.6;
+            const deadzoneHeight = this.camera.height * 0.6;
+            this.camera.follow(this.character, true, deadzoneWidth, deadzoneHeight);
+        }
 
         // Update click effects
         this.updateClickEffects();
@@ -3534,23 +3692,13 @@ export class Game {
                     this.updateControlsFromProject(project);
                 }
                 
-                // Auto-open star controls panel if closed (with cooldown check) - skip on mobile
-                if (starControlsPanel && starControlsPanel.classList.contains('hidden') && !this.input.isTouchDevice) {
-                    const now = Date.now();
-                    const cooldownPassed = !this.starControlsCloseTime || (now - this.starControlsCloseTime) >= 5000;
-                    
-                    if (cooldownPassed) {
-                        starControlsPanel.classList.remove('hidden');
-                        this.starControlsManuallyPositioned = false; // Reset when auto-opening
-                        this.starControlsManuallyOpened = false; // Mark as auto-opened
-                        // Position panel on right side
-                        if (this.positionStarControlsPanel) {
-                            setTimeout(() => this.positionStarControlsPanel(), 0);
-                        }
-                        // Reset cooldown when auto-opening
-                        this.starControlsCloseTime = null;
-                    }
+                // Show modify button when near a star
+                if (!this.modifyButtonVisible || this.currentNearbyStar !== project) {
+                    this.showModifyButton(project);
                 }
+            } else if (!isInBoundary && wasInBoundary && this.currentNearbyStar === project) {
+                // Hide modify button when leaving star
+                this.hideModifyButton();
             }
             
             // Clear current star when leaving boundary
@@ -3561,6 +3709,15 @@ export class Game {
                 if (starNameElement) {
                     starNameElement.textContent = '';
                 }
+                // Hide modify button if it was showing for this star
+                if (this.currentNearbyStar === project) {
+                    this.hideModifyButton();
+                }
+            }
+            
+            // Update modify button position if visible and near this star
+            if (isInBoundary && this.modifyButtonVisible && this.currentNearbyStar === project) {
+                this.updateModifyButtonPosition(project);
             }
             
             // Auto-close removed - panel stays open once opened
@@ -3613,7 +3770,9 @@ export class Game {
     }
 
     render() {
-        this.world.render(this.camera, this.character, this.maxProximityValue);
+        // Hide nametags on mobile
+        const renderNametags = !this.input.isTouchDevice;
+        this.world.render(this.camera, this.character, this.maxProximityValue, true, true, null, null, renderNametags);
         // Render click effects on top
         const ctx = this.world.getCanvas().getContext('2d');
         this.renderClickEffects(ctx, this.camera);

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Server Test</title>
+</head>
+<body>
+    <h1>Server Test</h1>
+    <p>If you can see this, the server is working!</p>
+    <button onclick="testLocalStorage()">Test LocalStorage Access</button>
+    <div id="result"></div>
+    
+    <script>
+        function testLocalStorage() {
+            try {
+                const presets = localStorage.getItem('starPresets');
+                const result = document.getElementById('result');
+                if (presets) {
+                    result.innerHTML = '<p style="color: green;">LocalStorage found! Presets exist.</p>';
+                    result.innerHTML += '<textarea style="width: 100%; height: 200px;">' + presets + '</textarea>';
+                } else {
+                    result.innerHTML = '<p style="color: orange;">LocalStorage accessible but no presets found.</p>';
+                }
+            } catch (e) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Error: ' + e.message + '</p>';
+            }
+        }
+        
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            testLocalStorage();
+        });
+    </script>
+</body>
+</html>

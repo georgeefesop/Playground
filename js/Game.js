@@ -2441,8 +2441,8 @@ export class Game {
                 return;
             }
 
-            // Check if clicked on character
-            if (this.character.containsPoint(worldPos.x, worldPos.y)) {
+            // Check if clicked on character - skip on mobile
+            if (this.character.containsPoint(worldPos.x, worldPos.y) && !this.input.isTouchDevice) {
                 e.preventDefault();
                 this.showMessagePrompt();
             }
@@ -2517,6 +2517,11 @@ export class Game {
     }
 
     showThoughtBubble(text, duration = 5000) {
+        // Skip on mobile devices
+        if (this.input.isTouchDevice) {
+            return;
+        }
+        
         // Messages live for exactly 5 seconds
         duration = 5000;
         
@@ -3390,8 +3395,8 @@ export class Game {
                     this.updateControlsFromProject(project);
                 }
                 
-                // Auto-open star controls panel if closed (with cooldown check)
-                if (starControlsPanel && starControlsPanel.classList.contains('hidden')) {
+                // Auto-open star controls panel if closed (with cooldown check) - skip on mobile
+                if (starControlsPanel && starControlsPanel.classList.contains('hidden') && !this.input.isTouchDevice) {
                     const now = Date.now();
                     const cooldownPassed = !this.starControlsCloseTime || (now - this.starControlsCloseTime) >= 5000;
                     

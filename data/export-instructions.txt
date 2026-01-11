@@ -1,0 +1,1 @@
+To export presets, open browser console and run: JSON.stringify(JSON.parse(localStorage.getItem('starPresets') || '[]'), null, 2)

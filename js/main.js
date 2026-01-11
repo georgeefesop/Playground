@@ -2,6 +2,6 @@ import { Game } from './Game.js';
 
 // Initialize the game when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    const game = new Game();
+    window.game = new Game(); // Make globally accessible for preset export
     game.start();
 });

@@ -651,6 +651,36 @@ body {
     #message-prompt {
         width: calc(100% - 2rem);
     }
+
+    #logo .logo-text {
+        font-size: 0.75rem; /* 50% of 1.5rem */
+    }
+
+    #zoom-slider {
+        background: rgba(200, 200, 200, 0.9); /* Light gray background for visibility */
+    }
+
+    /* Top buttons horizontally across top on mobile */
+    #settings-toggle-btn,
+    #star-controls-toggle-btn,
+    #activate-all-stars-ui-btn {
+        position: fixed;
+        top: 0.5rem;
+        right: auto;
+        display: inline-flex;
+    }
+    
+    #settings-toggle-btn {
+        left: 0.5rem;
+    }
+    
+    #star-controls-toggle-btn {
+        left: calc(0.5rem + 60px + 0.5rem); /* After settings button */
+    }
+    
+    #activate-all-stars-ui-btn {
+        left: calc(0.5rem + 120px + 1rem); /* After star controls button */
+    }
 }
 
 /* Touch device joystick */

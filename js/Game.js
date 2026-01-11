@@ -107,6 +107,9 @@ export class Game {
             ['zoom-slider', 1800]
         ]);
 
+        // Load default presets if localStorage is empty
+        this.loadDefaultPresetsIfNeeded();
+        
         this.setupProjects();
         this.setupUI();
         this.setupInteraction();
@@ -130,10 +133,16 @@ export class Game {
         }
         // Controls is a modal popup, not draggable
 
-        // Spawn character between the two stars
-        // Project 1 is at (-250, -200), Project 2 is at (400, 200)
-        const spawnX = (-250 + 400) / 2; // 75
-        const spawnY = (-200 + 200) / 2; // 0
+        // Spawn character - on mobile, spawn on Experiment Alpha
+        let spawnX, spawnY;
+        if (this.input.isTouchDevice) {
+            spawnX = -250; // Experiment Alpha x position
+            spawnY = -200; // Experiment Alpha y position
+        } else {
+            // Desktop: spawn between the two stars
+            spawnX = (-250 + 400) / 2; // 75
+            spawnY = (-200 + 200) / 2; // 0
+        }
         this.character.x = spawnX;
         this.character.y = spawnY;
         this.character.targetX = spawnX;
@@ -142,10 +151,19 @@ export class Game {
         // Center camera on character
         this.camera.x = this.character.x - this.camera.width / 2;
         this.camera.y = this.character.y - this.camera.height / 2;
+        
+        // Set default zoom on mobile
+        if (this.input.isTouchDevice) {
+            this.camera.setZoom(0.8);
+            this.camera.zoom = 0.8; // Set immediately, not just target
+        }
     }
 
     setupProjects() {
-        const project1 = new Project(-250, -200, {
+        // Scale star positions for mobile to bring them closer together
+        const positionScale = this.input.isTouchDevice ? 0.5 : 1.0;
+        
+        const project1 = new Project(-250 * positionScale, -200 * positionScale, {
             label: 'Experiment Alpha',
             shape: 'circle',
             color: getComputedStyle(document.documentElement).getPropertyValue('--color-star-alpha-base').trim() || '#1a1f2e',      // Dark midnight bluish charcoal grey (dark star)
@@ -169,7 +187,7 @@ export class Game {
         project1.randomnessRatio = 0.80;
         project1.glowIntensity = 0.0;
 
-        const project2 = new Project(400, 200, {
+        const project2 = new Project(400 * positionScale, 200 * positionScale, {
             label: 'Experiment Beta',
             shape: 'circle',
             color: getComputedStyle(document.documentElement).getPropertyValue('--color-star-beta-base').trim() || '#f5f5f5',      // Almost white (light star)
@@ -258,9 +276,9 @@ export class Game {
         // Create 3 additional stars with randomized or preset properties
         const starNames = ['Experiment Gamma', 'Experiment Delta', 'Experiment Epsilon'];
         const starPositions = [
-            { x: -400, y: 300 },
-            { x: 600, y: -300 },
-            { x: 0, y: 500 }
+            { x: -400 * positionScale, y: 300 * positionScale },
+            { x: 600 * positionScale, y: -300 * positionScale },
+            { x: 0, y: 500 * positionScale }
         ];
 
         for (let i = 0; i < 3; i++) {
@@ -681,6 +699,50 @@ export class Game {
             if (!panel.classList.contains('hidden')) {
                 // Panel was opened - mark as manually opened
                 this.starControlsManuallyOpened = true;
+                
+                // On mobile, focus camera on nearest star
+                if (this.input.isTouchDevice) {
+                    const projects = this.world.getProjects();
+                    const charPos = this.character.getPosition();
+                    let nearestStar = null;
+                    let nearestDistance = Infinity;
+                    
+                    projects.forEach(project => {
+                        const distance = project.distanceTo(charPos.x, charPos.y);
+                        if (distance < nearestDistance) {
+                            nearestDistance = distance;
+                            nearestStar = project;
+                        }
+                    });
+                    
+                    if (nearestStar) {
+                        // Smoothly move camera to center on nearest star
+                        const targetX = nearestStar.x - (this.camera.width / 2) / this.camera.zoom;
+                        const targetY = nearestStar.y - (this.camera.height / 2) / this.camera.zoom;
+                        
+                        // Animate camera to star position
+                        const startX = this.camera.x;
+                        const startY = this.camera.y;
+                        const duration = 500; // 500ms animation
+                        const startTime = Date.now();
+                        
+                        const animateCamera = () => {
+                            const elapsed = Date.now() - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            // Ease-out cubic
+                            const eased = 1 - Math.pow(1 - progress, 3);
+                            
+                            this.camera.x = startX + (targetX - startX) * eased;
+                            this.camera.y = startY + (targetY - startY) * eased;
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(animateCamera);
+                            }
+                        };
+                        animateCamera();
+                    }
+                }
+                
                 setTimeout(() => positionPanelNearStar(), 0);
             } else {
                 // Panel was closed - reset flags
@@ -1671,6 +1733,33 @@ export class Game {
         }
     }
 
+    async loadDefaultPresetsIfNeeded() {
+        // Check if localStorage has presets
+        const existingPresets = localStorage.getItem('starPresets');
+        if (existingPresets) {
+            return; // Already have presets, don't load defaults
+        }
+        
+        // Load default presets from file
+        try {
+            const response = await fetch('data/default-presets.json');
+            if (response.ok) {
+                const defaultPresets = await response.json();
+                if (Array.isArray(defaultPresets) && defaultPresets.length > 0) {
+                    // Save defaults to localStorage
+                    try {
+                        localStorage.setItem('starPresets', JSON.stringify(defaultPresets));
+                        console.log(`Loaded ${defaultPresets.length} default presets`);
+                    } catch (e) {
+                        console.warn('Could not save default presets to localStorage:', e);
+                    }
+                }
+            }
+        } catch (e) {
+            // File doesn't exist or error - that's okay, will start with empty presets
+        }
+    }
+
     getAllPresets() {
         try {
             const presetsJson = localStorage.getItem('starPresets');
@@ -1695,6 +1784,23 @@ export class Game {
             }
             return [];
         }
+    }
+
+    // Helper method to export current presets (call from browser console: game.exportPresets())
+    exportPresets() {
+        const presets = this.getAllPresets();
+        const json = JSON.stringify(presets, null, 2);
+        console.log('Copy this JSON to data/default-presets.json:');
+        console.log(json);
+        // Also copy to clipboard if possible
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(json).then(() => {
+                console.log('Presets copied to clipboard!');
+            }).catch(() => {
+                console.log('Could not copy to clipboard, see console output above');
+            });
+        }
+        return json;
     }
 
     savePreset(name, project) {
@@ -2710,15 +2816,7 @@ export class Game {
         xOffset = rect.left;
         yOffset = rect.top;
 
-        handle.addEventListener('mousedown', (e) => {
-            // Check if the clicked element is the close button
-            if (e.target.classList.contains('menu-close-btn')) {
-                return; // Don't drag when clicking close button
-            }
-            
-            // Set dragging flag IMMEDIATELY to prevent positioning interference
-            element.dataset.dragging = 'true';
-            
+        const startDrag = (clientX, clientY) => {
             // Get current position from computed style (not from getBoundingClientRect which might be stale)
             const computedStyle = window.getComputedStyle(element);
             const currentLeft = parseFloat(computedStyle.left) || 0;
@@ -2737,19 +2835,45 @@ export class Game {
             xOffset = currentLeft + transformX;
             yOffset = currentTop + transformY;
             
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
+            initialX = clientX - xOffset;
+            initialY = clientY - yOffset;
 
             isDragging = true;
             element.style.cursor = 'grabbing';
             if (handle) handle.style.cursor = 'grabbing';
+        };
+
+        handle.addEventListener('mousedown', (e) => {
+            // Check if the clicked element is the close button
+            if (e.target.classList.contains('menu-close-btn')) {
+                return; // Don't drag when clicking close button
+            }
+            
+            // Set dragging flag IMMEDIATELY to prevent positioning interference
+            element.dataset.dragging = 'true';
+            
+            startDrag(e.clientX, e.clientY);
         });
 
-        const handleMouseMove = (e) => {
+        // Add touch event support for mobile
+        handle.addEventListener('touchstart', (e) => {
+            // Check if the touched element is the close button
+            if (e.target.classList.contains('menu-close-btn')) {
+                return; // Don't drag when touching close button
+            }
+            
+            // Set dragging flag IMMEDIATELY to prevent positioning interference
+            element.dataset.dragging = 'true';
+            
+            const touch = e.touches[0];
+            startDrag(touch.clientX, touch.clientY);
+            e.preventDefault(); // Prevent scrolling
+        });
+
+        const handleMove = (clientX, clientY) => {
             if (isDragging) {
-                e.preventDefault();
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
+                currentX = clientX - initialX;
+                currentY = clientY - initialY;
 
                 xOffset = currentX;
                 yOffset = currentY;
@@ -2760,7 +2884,20 @@ export class Game {
             }
         };
 
-        const handleMouseUp = () => {
+        const handleMouseMove = (e) => {
+            e.preventDefault();
+            handleMove(e.clientX, e.clientY);
+        };
+
+        const handleTouchMove = (e) => {
+            if (isDragging && e.touches.length > 0) {
+                e.preventDefault(); // Prevent scrolling
+                const touch = e.touches[0];
+                handleMove(touch.clientX, touch.clientY);
+            }
+        };
+
+        const handleUp = () => {
             if (isDragging) {
                 isDragging = false;
                 element.style.cursor = '';
@@ -2774,7 +2911,9 @@ export class Game {
         };
 
         document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('mouseup', handleUp);
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleUp);
     }
 
     makeResizable(element) {

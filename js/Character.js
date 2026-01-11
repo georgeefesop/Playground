@@ -31,9 +31,15 @@ export class Character {
         this.sprite = new Image();
         this.sprite.src = 'assets/character-sprite.png';
         this.spriteLoaded = false;
+        // #region agent log
         this.sprite.onload = () => {
             this.spriteLoaded = true;
+            fetch('http://127.0.0.1:7242/ingest/f54f7081-85c5-46b3-9791-73f1ba1b818e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Character.js:34',message:'sprite onload',data:{spriteWidth:this.sprite.width,spriteHeight:this.sprite.height,isTouchDevice:window.innerWidth<=768},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
         };
+        this.sprite.onerror = () => {
+            fetch('http://127.0.0.1:7242/ingest/f54f7081-85c5-46b3-9791-73f1ba1b818e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Character.js:34',message:'sprite onerror',data:{src:this.sprite.src,isTouchDevice:window.innerWidth<=768},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
+        };
+        // #endregion
 
         // Sprite sheet layout (4 rows x 3 columns)
         this.spriteWidth = 16;

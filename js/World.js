@@ -43,6 +43,17 @@ export class World {
                 if (!this.backgroundImage) {
                     this.backgroundImage = new Image();
                     this.backgroundImage.src = 'assets/space.png';
+                    // Redraw when image loads
+                    this.backgroundImage.onload = () => {
+                        // Trigger a redraw by calling render if game is running
+                        if (window.game && window.game.isRunning) {
+                            window.game.render();
+                        }
+                    };
+                    this.backgroundImage.onerror = () => {
+                        // Image failed to load, will use fallback
+                        console.warn('Background image failed to load:', this.backgroundImage.src);
+                    };
                 }
                 // Fallback while loading
                 ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';

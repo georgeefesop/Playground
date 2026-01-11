@@ -159,33 +159,6 @@ export class Game {
         this.camera.x = this.character.x - this.camera.width / 2;
         this.camera.y = this.character.y - this.camera.height / 2;
         
-        // #region agent log
-        setTimeout(() => {
-            const settingsBtn = document.getElementById('settings-toggle-btn');
-            const starControlsBtn = document.getElementById('star-controls-toggle-btn');
-            const activateBtn = document.getElementById('activate-all-stars-ui-btn');
-            const randomizeBtn = document.getElementById('randomize-stars-ui-btn');
-            const btnData = {};
-            if (settingsBtn) {
-                const rect = settingsBtn.getBoundingClientRect();
-                btnData.settings = {left:rect.left,top:rect.top,width:rect.width,height:rect.height,computedLeft:getComputedStyle(settingsBtn).left,computedTop:getComputedStyle(settingsBtn).top};
-            }
-            if (starControlsBtn) {
-                const rect = starControlsBtn.getBoundingClientRect();
-                btnData.starControls = {left:rect.left,top:rect.top,width:rect.width,height:rect.height,computedLeft:getComputedStyle(starControlsBtn).left,computedTop:getComputedStyle(starControlsBtn).top};
-            }
-            if (activateBtn) {
-                const rect = activateBtn.getBoundingClientRect();
-                btnData.activate = {left:rect.left,top:rect.top,width:rect.width,height:rect.height,computedLeft:getComputedStyle(activateBtn).left,computedTop:getComputedStyle(activateBtn).top};
-            }
-            if (randomizeBtn) {
-                const rect = randomizeBtn.getBoundingClientRect();
-                btnData.randomize = {left:rect.left,top:rect.top,width:rect.width,height:rect.height,computedLeft:getComputedStyle(randomizeBtn).left,computedTop:getComputedStyle(randomizeBtn).top};
-            }
-            fetch('http://127.0.0.1:7242/ingest/f54f7081-85c5-46b3-9791-73f1ba1b818e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Game.js:143',message:'button positions after init',data:{isTouchDevice:this.input.isTouchDevice,windowWidth:window.innerWidth,windowHeight:window.innerHeight,buttons:btnData},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-        }, 500);
-        // #endregion
-        
         // Set default zoom on mobile
         if (this.input.isTouchDevice) {
             this.camera.setZoom(0.8);
@@ -4256,13 +4229,6 @@ export class Game {
     render() {
         // Hide nametags on mobile
         const renderNametags = !this.input.isTouchDevice;
-        // #region agent log
-        if (!this._renderLogged) {
-            const canvas = this.world.getCanvas();
-            fetch('http://127.0.0.1:7242/ingest/f54f7081-85c5-46b3-9791-73f1ba1b818e',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Game.js:4206',message:'render entry',data:{isTouchDevice:this.input.isTouchDevice,canvasWidth:canvas.width,canvasHeight:canvas.height,projectsCount:this.world.projects.length,characterX:this.character.x,characterY:this.character.y,characterSpriteLoaded:this.character.spriteLoaded},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-            this._renderLogged = true;
-        }
-        // #endregion
         // Pass currentStar to show modify text in nameplate when in boundary
         this.world.render(this.camera, this.character, this.maxProximityValue, true, true, null, null, renderNametags, this.currentStar);
         // Render click effects on top

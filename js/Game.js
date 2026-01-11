@@ -58,9 +58,9 @@ export class Game {
         this.panelCurrentY = null;
         this.panelPositionRafId = null;
         
-        // Track modify button state
-        this.modifyButtonVisible = false;
-        this.currentNearbyStar = null; // Track which star we're near
+        // Track default presets loading
+        this.defaultPresetsLoadStarted = false;
+        
         // Animation state for activate all stars transition
         this.starsActivationAnimating = false;
         this.starsActivationStartTime = null;
@@ -126,7 +126,10 @@ export class Game {
         
         if (settingsPanel) {
             const settingsTitleBar = settingsPanel.querySelector('.menu-title-bar');
-            if (settingsTitleBar) this.makeDraggable(settingsPanel, settingsTitleBar);
+            if (settingsTitleBar) {
+                this.makeDraggable(settingsPanel, settingsTitleBar);
+                this.makeResizable(settingsPanel);
+            }
         }
         if (starControlsPanel) {
             const starControlsTitleBar = starControlsPanel.querySelector('.menu-title-bar');
@@ -167,7 +170,7 @@ export class Game {
         // Scale star positions for mobile to bring them closer together
         const positionScale = this.input.isTouchDevice ? 0.5 : 1.0;
         
-        const project1 = new Project(-250 * positionScale, -200 * positionScale, {
+        const project1 = new Project(-200 * positionScale, -150 * positionScale, {
             label: 'Experiment Alpha',
             shape: 'circle',
             color: getComputedStyle(document.documentElement).getPropertyValue('--color-star-alpha-base').trim() || '#1a1f2e',      // Dark midnight bluish charcoal grey (dark star)
@@ -191,7 +194,7 @@ export class Game {
         project1.randomnessRatio = 0.80;
         project1.glowIntensity = 0.0;
 
-        const project2 = new Project(400 * positionScale, 200 * positionScale, {
+        const project2 = new Project(300 * positionScale, 150 * positionScale, {
             label: 'Experiment Beta',
             shape: 'circle',
             color: getComputedStyle(document.documentElement).getPropertyValue('--color-star-beta-base').trim() || '#f5f5f5',      // Almost white (light star)
@@ -242,17 +245,31 @@ export class Game {
                 return;
             }
 
-            // Find an unused preset index
+            // Find an unused preset index - ensure no duplicates
             let presetIndex;
             let attempts = 0;
+            const maxAttempts = availablePresets.length * 2; // Allow some retries
+            
+            // If all presets have been used, reset the set to allow reuse
+            if (usedPresetIndices.size >= availablePresets.length) {
+                usedPresetIndices.clear();
+            }
+            
             do {
                 presetIndex = Math.floor(Math.random() * availablePresets.length);
                 attempts++;
-                // If we've tried all presets, allow reuse
-                if (attempts > availablePresets.length) {
+                // If we've tried many times, just use any available preset
+                if (attempts > maxAttempts) {
+                    // Find first unused preset, or use any if all are used
+                    for (let i = 0; i < availablePresets.length; i++) {
+                        if (!usedPresetIndices.has(i)) {
+                            presetIndex = i;
+                            break;
+                        }
+                    }
                     break;
                 }
-            } while (usedPresetIndices.has(presetIndex) && attempts <= availablePresets.length);
+            } while (usedPresetIndices.has(presetIndex));
 
             usedPresetIndices.add(presetIndex);
             const preset = availablePresets[presetIndex];
@@ -280,9 +297,9 @@ export class Game {
         // Create 3 additional stars with randomized or preset properties
         const starNames = ['Experiment Gamma', 'Experiment Delta', 'Experiment Epsilon'];
         const starPositions = [
-            { x: -400 * positionScale, y: 300 * positionScale },
-            { x: 600 * positionScale, y: -300 * positionScale },
-            { x: 0, y: 500 * positionScale }
+            { x: -300 * positionScale, y: 225 * positionScale },
+            { x: 450 * positionScale, y: -225 * positionScale },
+            { x: 0, y: 375 * positionScale }
         ];
 
         for (let i = 0; i < 3; i++) {
@@ -364,9 +381,26 @@ export class Game {
 
         // Function to position panel avoiding UI buttons
         const positionSettingsPanel = () => {
+            // On mobile, center the panel
+            if (this.input.isTouchDevice) {
+                settingsPanel.style.left = '50%';
+                settingsPanel.style.right = 'auto';
+                settingsPanel.style.top = '50%';
+                settingsPanel.style.bottom = 'auto';
+                settingsPanel.style.transform = 'translate(-50%, -50%)';
+                settingsPanel.style.width = 'calc(100vw - 2rem)';
+                settingsPanel.style.maxWidth = 'calc(100vw - 2rem)';
+                settingsPanel.style.height = '70vh';
+                settingsPanel.style.maxHeight = '70vh';
+                return;
+            }
+            
+            // Set default height to 70vh
+            settingsPanel.style.height = '70vh';
+            settingsPanel.style.maxHeight = '70vh';
+            
             const gap = 20; // Gap between panel and buttons
-            const panelRect = settingsPanel.getBoundingClientRect();
-            const panelHeight = panelRect.height;
+            const panelHeight = window.innerHeight * 0.7; // 70vh
             
             // Get button positions
             const settingsBtn = document.getElementById('settings-toggle-btn');
@@ -410,6 +444,7 @@ export class Game {
             // Ensure panel stays within viewport
             topPosition = Math.max(panelHeight / 2 + gap, Math.min(window.innerHeight - panelHeight / 2 - gap, topPosition));
             
+            settingsPanel.style.left = '1rem';
             settingsPanel.style.top = `${topPosition}px`;
             settingsPanel.style.transform = 'translateY(-50%)';
         };
@@ -547,6 +582,16 @@ export class Game {
         });
 
         // Speed slider
+        // Helper function to add immediate haptic feedback on slider interaction start (for settings panel)
+        const addSettingsSliderImmediateFeedback = (slider) => {
+            if (!slider) return;
+            const handleStart = () => {
+                this.playHapticSound('click');
+            };
+            slider.addEventListener('mousedown', handleStart);
+            slider.addEventListener('touchstart', handleStart);
+        };
+
         const speedSlider = document.getElementById('speed-slider');
         // Initialize character speed to match slider value
         const initialSpeed = parseFloat(speedSlider.value);
@@ -562,6 +607,7 @@ export class Game {
             document.getElementById('speed-value').textContent = speedMultiplier.toFixed(1);
         });
         
+        addSettingsSliderImmediateFeedback(speedSlider);
         // Setup min/max click-to-snap for speed slider
         const speedMin = document.querySelector('#speed-slider').closest('.settings-option').querySelector('.slider-min');
         const speedMax = document.querySelector('#speed-slider').closest('.settings-option').querySelector('.slider-max');
@@ -589,6 +635,7 @@ export class Game {
                 this.setSFXVolume(volume);
                 document.getElementById('sfx-volume-value').textContent = volume.toFixed(1);
             });
+            addSettingsSliderImmediateFeedback(sfxVolumeSlider);
         }
     }
     
@@ -785,38 +832,6 @@ export class Game {
             this.starControlsManuallyOpened = false; // Reset manual open flag
         });
 
-        // Modify button click handler
-        const modifyBtn = document.getElementById('modify-star-btn');
-        if (modifyBtn) {
-            modifyBtn.addEventListener('click', () => {
-                this.playHapticSound('click');
-                // Open star controls panel
-                if (panel && this.currentNearbyStar) {
-                    // Set current star in selector
-                    const starIndex = this.world.getProjects().indexOf(this.currentNearbyStar);
-                    if (starSelector && starIndex !== -1) {
-                        starSelector.value = starIndex.toString();
-                        // Update save button state
-                        if (this.updateSaveButtonState) {
-                            this.updateSaveButtonState();
-                        }
-                    }
-                    // Update all controls to match the star's current values
-                    if (this.updateControlsFromProject) {
-                        this.updateControlsFromProject(this.currentNearbyStar);
-                    }
-                    // Open panel
-                    panel.classList.remove('hidden');
-                    this.starControlsManuallyOpened = true;
-                    // Position panel on right side
-                    if (this.positionStarControlsPanel) {
-                        setTimeout(() => this.positionStarControlsPanel(), 0);
-                    }
-                    // Hide modify button
-                    this.hideModifyButton();
-                }
-            });
-        }
         
         // Update position and controls when star selection changes
         starSelector.addEventListener('change', () => {
@@ -1037,6 +1052,18 @@ export class Game {
         this.sliderPreviousValues.set('waviness2-slider', parseFloat(waviness2Slider.value));
         this.sliderPreviousValues.set('randomness-ratio-slider', parseFloat(randomnessRatioSlider.value));
 
+        // Helper function to add immediate haptic feedback on slider interaction start
+        const addSliderImmediateFeedback = (slider) => {
+            if (!slider) return;
+            const handleStart = () => {
+                if (!this.updatingControlsFromProject) {
+                    this.playHapticSound('click');
+                }
+            };
+            slider.addEventListener('mousedown', handleStart);
+            slider.addEventListener('touchstart', handleStart);
+        };
+
         // Add listeners with value display updates (ordered to match HTML)
         spokeCountSlider.addEventListener('input', (e) => {
             if (this.updatingControlsFromProject) return; // Skip if programmatic update
@@ -1045,6 +1072,7 @@ export class Game {
             document.getElementById('spoke-count-value').textContent = value;
             updateSpokeProperties();
         });
+        addSliderImmediateFeedback(spokeCountSlider);
         // Setup click-to-snap for min/max
         const spokeCountMin = document.querySelector('#spoke-count-slider').closest('.settings-option').querySelector('.slider-min');
         const spokeCountMax = document.querySelector('#spoke-count-slider').closest('.settings-option').querySelector('.slider-max');
@@ -1057,6 +1085,7 @@ export class Game {
             document.getElementById('spoke-max-length-value').textContent = value.toFixed(2);
             updateSpokeProperties();
         });
+        addSliderImmediateFeedback(spokeMaxLengthSlider);
         const spokeMaxLengthMin = document.querySelector('#spoke-max-length-slider').closest('.settings-option').querySelector('.slider-min');
         const spokeMaxLengthMax = document.querySelector('#spoke-max-length-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(spokeMaxLengthSlider, spokeMaxLengthMin, spokeMaxLengthMax);
@@ -1068,6 +1097,7 @@ export class Game {
             document.getElementById('spoke-width1-value').textContent = value.toFixed(1);
             updateSpokeProperties();
         });
+        addSliderImmediateFeedback(spokeWidth1Slider);
         const spokeWidth1Min = document.querySelector('#spoke-width1-slider').closest('.settings-option').querySelector('.slider-min');
         const spokeWidth1Max = document.querySelector('#spoke-width1-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(spokeWidth1Slider, spokeWidth1Min, spokeWidth1Max);
@@ -1079,6 +1109,7 @@ export class Game {
             document.getElementById('spoke-width2-value').textContent = value.toFixed(1);
             updateSpokeProperties();
         });
+        addSliderImmediateFeedback(spokeWidth2Slider);
         const spokeWidth2Min = document.querySelector('#spoke-width2-slider').closest('.settings-option').querySelector('.slider-min');
         const spokeWidth2Max = document.querySelector('#spoke-width2-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(spokeWidth2Slider, spokeWidth2Min, spokeWidth2Max);
@@ -1090,6 +1121,7 @@ export class Game {
             document.getElementById('waviness1-value').textContent = value.toFixed(2);
             updateSpokeProperties();
         });
+        addSliderImmediateFeedback(waviness1Slider);
         const waviness1Min = document.querySelector('#waviness1-slider').closest('.settings-option').querySelector('.slider-min');
         const waviness1Max = document.querySelector('#waviness1-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(waviness1Slider, waviness1Min, waviness1Max);
@@ -1101,6 +1133,7 @@ export class Game {
             document.getElementById('waviness2-value').textContent = value.toFixed(2);
             updateSpokeProperties();
         });
+        addSliderImmediateFeedback(waviness2Slider);
         const waviness2Min = document.querySelector('#waviness2-slider').closest('.settings-option').querySelector('.slider-min');
         const waviness2Max = document.querySelector('#waviness2-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(waviness2Slider, waviness2Min, waviness2Max);
@@ -1112,6 +1145,7 @@ export class Game {
             document.getElementById('randomness-ratio-value').textContent = value.toFixed(2);
             updateSpokeProperties();
         });
+        addSliderImmediateFeedback(randomnessRatioSlider);
         const randomnessRatioMin = document.querySelector('#randomness-ratio-slider').closest('.settings-option').querySelector('.slider-min');
         const randomnessRatioMax = document.querySelector('#randomness-ratio-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(randomnessRatioSlider, randomnessRatioMin, randomnessRatioMax);
@@ -1128,6 +1162,7 @@ export class Game {
                 project.updateAnimationSpeed(speed);
             });
         });
+        addSliderImmediateFeedback(animationSpeedSlider);
         const animationSpeedMin = document.querySelector('#animation-speed-slider').closest('.settings-option').querySelector('.slider-min');
         const animationSpeedMax = document.querySelector('#animation-speed-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(animationSpeedSlider, animationSpeedMin, animationSpeedMax);
@@ -1144,6 +1179,7 @@ export class Game {
                 project.updateNucleusSize(size);
             });
         });
+        addSliderImmediateFeedback(nucleusSizeSlider);
         const nucleusSizeMin = document.querySelector('#nucleus-size-slider').closest('.settings-option').querySelector('.slider-min');
         const nucleusSizeMax = document.querySelector('#nucleus-size-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(nucleusSizeSlider, nucleusSizeMin, nucleusSizeMax);
@@ -1159,6 +1195,7 @@ export class Game {
                 project.updateNucleusBlur(blur);
             });
         });
+        addSliderImmediateFeedback(nucleusBlurSlider);
         const nucleusBlurMin = document.querySelector('#nucleus-blur-slider').closest('.settings-option').querySelector('.slider-min');
         const nucleusBlurMax = document.querySelector('#nucleus-blur-slider').closest('.settings-option').querySelector('.slider-max');
         this.setupSliderMinMaxClick(nucleusBlurSlider, nucleusBlurMin, nucleusBlurMax);
@@ -1819,6 +1856,13 @@ export class Game {
     }
 
     getAllPresets() {
+        // Start async load if not already started and localStorage is empty
+        if (!this.defaultPresetsLoadStarted && !localStorage.getItem('starPresets')) {
+            this.defaultPresetsLoadStarted = true;
+            this.loadDefaultPresetsIfNeeded();
+        }
+        
+        // Return current localStorage presets (may be empty initially)
         try {
             const presetsJson = localStorage.getItem('starPresets');
             if (!presetsJson) {
@@ -2530,15 +2574,44 @@ export class Game {
             this.handleSliderTick(e.target, zoom);
         });
         
-        // Also play haptic sound on change
-        zoomSlider.addEventListener('change', () => {
-            this.playHapticSound('click');
-        });
+        // Add immediate feedback for zoom slider
+        const addZoomSliderImmediateFeedback = (slider) => {
+            if (!slider) return;
+            const handleStart = () => {
+                this.playHapticSound('click');
+            };
+            slider.addEventListener('mousedown', handleStart);
+            slider.addEventListener('touchstart', handleStart);
+        };
+        addZoomSliderImmediateFeedback(zoomSlider);
         
         // Setup click-to-snap for min/max
         const zoomMin = document.querySelector('#zoom-slider').closest('.zoom-control').querySelector('.slider-min');
         const zoomMax = document.querySelector('#zoom-slider').closest('.zoom-control').querySelector('.slider-max');
         this.setupSliderMinMaxClick(zoomSlider, zoomMin, zoomMax);
+    }
+
+    updateStarNameDisplay(project = null) {
+        const starNameElement = document.getElementById('current-star-name');
+        const starControlsPanel = document.getElementById('star-controls-panel');
+        
+        if (!starNameElement) return;
+        
+        // Use provided project or current star
+        const targetProject = project || this.currentStar;
+        
+        if (!targetProject) {
+            starNameElement.textContent = '';
+            return;
+        }
+        
+        // Check if panel is snapped to side
+        const isSnapped = starControlsPanel && 
+            (starControlsPanel.classList.contains('sticky-left') || 
+             starControlsPanel.classList.contains('sticky-right'));
+        
+        // If snapped, show name without dash, otherwise with dash
+        starNameElement.textContent = isSnapped ? targetProject.label : ` - ${targetProject.label}`;
     }
 
     activateAllStars() {
@@ -2603,6 +2676,7 @@ export class Game {
     setupActivateAllStars() {
         const activateBtn = document.getElementById('activate-all-stars-btn');
         const activateUiBtn = document.getElementById('activate-all-stars-ui-btn');
+        const randomizeStarsUiBtn = document.getElementById('randomize-stars-ui-btn');
         
         // Initialize button state for both buttons
         this.updateActivateStarsButton();
@@ -2622,6 +2696,114 @@ export class Game {
                 this.activateAllStars();
             });
         }
+        
+        // Add click listener to randomize stars UI overlay button
+        if (randomizeStarsUiBtn) {
+            randomizeStarsUiBtn.addEventListener('click', () => {
+                this.playHapticSound('click');
+                this.randomizeAllStars();
+            });
+        }
+    }
+    
+    randomizeAllStars() {
+        const projects = this.world.getProjects();
+        if (projects.length === 0) return;
+        
+        // Helper function to generate random value in range
+        const randomInRange = (min, max, step = 1) => {
+            const steps = Math.floor((max - min) / step) + 1;
+            return min + Math.floor(Math.random() * steps) * step;
+        };
+        
+        // Helper function to generate random hex color
+        const randomColor = () => {
+            return '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
+        };
+        
+        // Get available presets
+        const availablePresets = this.getAllPresets();
+        const usedPresetIndices = new Set();
+        
+        // Function to apply random properties to a project
+        const applyRandomProperties = (project) => {
+            project.spokeCount = randomInRange(20, 200, 5);
+            project.spokeBaseWidth1 = randomInRange(1.0, 5.0, 0.1);
+            project.spokeBaseWidth2 = randomInRange(0.5, 4.0, 0.1);
+            project.spokeMinLength = randomInRange(0.2, 1.0, 0.05);
+            project.spokeMaxLength = randomInRange(0.5, 3.3, 0.05);
+            project.spokeWaviness1 = randomInRange(0, 2, 0.1);
+            project.spokeWaviness2 = randomInRange(0, 2, 0.1);
+            project.randomnessRatio = randomInRange(0, 1, 0.05);
+            project.glowIntensity = randomInRange(0, 10, 0.5);
+            project.updateLayerColors(1, randomColor(), randomColor());
+            project.updateLayerColors(2, randomColor(), randomColor());
+            project.updateAnimationSpeed(randomInRange(0, 2.0, 0.1));
+            project.updateNucleusSize(randomInRange(0.1, 1.0, 0.01));
+            project.updateNucleusBlur(randomInRange(0, 100, 1));
+            project.proximityValue = 0;
+        };
+        
+        // Function to apply a random preset to a project (ensuring no duplicates)
+        const applyRandomPreset = (project) => {
+            if (availablePresets.length === 0) {
+                applyRandomProperties(project);
+                return;
+            }
+            
+            // Find an unused preset index - ensure no duplicates
+            let presetIndex;
+            let attempts = 0;
+            const maxAttempts = availablePresets.length * 2;
+            
+            // If all presets have been used, reset the set to allow reuse
+            if (usedPresetIndices.size >= availablePresets.length) {
+                usedPresetIndices.clear();
+            }
+            
+            do {
+                presetIndex = Math.floor(Math.random() * availablePresets.length);
+                attempts++;
+                if (attempts > maxAttempts) {
+                    // Find first unused preset, or use any if all are used
+                    for (let i = 0; i < availablePresets.length; i++) {
+                        if (!usedPresetIndices.has(i)) {
+                            presetIndex = i;
+                            break;
+                        }
+                    }
+                    break;
+                }
+            } while (usedPresetIndices.has(presetIndex));
+            
+            usedPresetIndices.add(presetIndex);
+            const preset = availablePresets[presetIndex];
+            this.applyStarPresetData(project, preset.data);
+            project.proximityValue = 0;
+        };
+        
+        // Randomize each star (50% chance for preset, 50% for random)
+        projects.forEach(project => {
+            if (availablePresets.length > 0 && Math.random() < 0.5) {
+                applyRandomPreset(project);
+            } else {
+                applyRandomProperties(project);
+            }
+        });
+        
+        // Update UI controls if panel is open and a star is selected
+        const starSelector = document.getElementById('star-selector');
+        if (starSelector && starSelector.value !== 'all') {
+            const selectedIndex = parseInt(starSelector.value);
+            if (!isNaN(selectedIndex) && selectedIndex >= 0 && selectedIndex < projects.length) {
+                const selectedProject = projects[selectedIndex];
+                if (this.updateControlsFromProject) {
+                    this.updateControlsFromProject(selectedProject);
+                }
+            }
+        }
+        
+        console.log(`Randomized ${projects.length} star(s)`);
     }
 
     setupInteraction() {
@@ -2643,6 +2825,71 @@ export class Game {
                 return;
             }
 
+            // Check if clicked on nameplate (entire nameplate is clickable) - open star controls panel
+            if (this.currentStar && this.currentStar.containsNameplatePoint(worldPos.x, worldPos.y)) {
+                e.preventDefault();
+                this.playHapticSound('click');
+                
+                // Open star controls panel
+                const panel = document.getElementById('star-controls-panel');
+                const starSelector = document.getElementById('star-selector');
+                
+                if (panel) {
+                    // Check if panel is already open and snapped
+                    const isOpen = !panel.classList.contains('hidden');
+                    const isSnapped = panel.classList.contains('sticky-left') || panel.classList.contains('sticky-right');
+                    
+                    // If panel is open and snapped, snap it back to top
+                    if (isOpen && isSnapped) {
+                        // Remove sticky classes
+                        panel.classList.remove('sticky-left', 'sticky-right');
+                        panel.dataset.sticky = '';
+                        
+                        // Reset positioning to allow normal positioning
+                        panel.style.left = '';
+                        panel.style.right = '';
+                        panel.style.top = '';
+                        panel.style.bottom = '';
+                        panel.style.height = '';
+                        panel.style.maxHeight = '';
+                        panel.style.transform = '';
+                        
+                        // Reset manual positioning flag
+                        this.starControlsManuallyPositioned = false;
+                        
+                        // Position panel on right side (top)
+                        if (this.positionStarControlsPanel) {
+                            setTimeout(() => this.positionStarControlsPanel(), 0);
+                        }
+                    } else {
+                        // Set current star in selector
+                        const starIndex = this.world.getProjects().indexOf(this.currentStar);
+                        if (starSelector && starIndex !== -1) {
+                            starSelector.value = starIndex.toString();
+                            // Update save button state
+                            if (this.updateSaveButtonState) {
+                                this.updateSaveButtonState();
+                            }
+                        }
+                        
+                        // Update all controls to match the star's current values
+                        if (this.updateControlsFromProject) {
+                            this.updateControlsFromProject(this.currentStar);
+                        }
+                        
+                        // Open panel
+                        panel.classList.remove('hidden');
+                        this.starControlsManuallyOpened = true;
+                        
+                        // Position panel on right side
+                        if (this.positionStarControlsPanel) {
+                            setTimeout(() => this.positionStarControlsPanel(), 0);
+                        }
+                    }
+                }
+                return;
+            }
+
             // Check if clicked on character - skip on mobile
             if (this.character.containsPoint(worldPos.x, worldPos.y) && !this.input.isTouchDevice) {
                 e.preventDefault();
@@ -2655,16 +2902,31 @@ export class Game {
             e.preventDefault();
         });
 
-        // Mouse hover effect
+        // Mouse hover effect and cursor management
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             const screenX = e.clientX - rect.left;
             const screenY = e.clientY - rect.top;
             const worldPos = this.camera.screenToWorld(screenX, screenY);
-
+            
+            // Check if mouse is over a clickable nameplate
+            let isOverNameplate = false;
+            if (this.currentStar && this.currentStar.containsNameplatePoint(worldPos.x, worldPos.y)) {
+                isOverNameplate = true;
+            }
+            
+            // Check character hover state
             const isHovered = this.character.containsPoint(worldPos.x, worldPos.y);
             this.character.setHovered(isHovered);
-            canvas.style.cursor = isHovered ? 'pointer' : 'default';
+            
+            // Update cursor based on hover state (nameplate takes priority over character)
+            if (isOverNameplate) {
+                canvas.style.cursor = 'pointer';
+            } else if (isHovered) {
+                canvas.style.cursor = 'pointer';
+            } else {
+                canvas.style.cursor = 'default';
+            }
         });
     }
 
@@ -2913,23 +3175,45 @@ export class Game {
         yOffset = rect.top;
 
         const startDrag = (clientX, clientY) => {
-            // Get current position from computed style (not from getBoundingClientRect which might be stale)
-            const computedStyle = window.getComputedStyle(element);
-            const currentLeft = parseFloat(computedStyle.left) || 0;
-            const currentTop = parseFloat(computedStyle.top) || 0;
-            
-            // Account for transform if present
-            let transformX = 0;
-            let transformY = 0;
-            const transform = computedStyle.transform;
-            if (transform && transform !== 'none') {
-                const matrix = new DOMMatrix(transform);
-                transformX = matrix.e;
-                transformY = matrix.f;
+            // If panel is sticky, unclip it before dragging
+            if ((element.id === 'star-controls-panel' || element.id === 'settings-panel') && 
+                (element.classList.contains('sticky-left') || element.classList.contains('sticky-right'))) {
+                // Remove sticky classes
+                element.classList.remove('sticky-left', 'sticky-right');
+                element.dataset.sticky = '';
+                
+                // Reset positioning to allow normal dragging
+                element.style.left = '';
+                element.style.right = '';
+                element.style.top = '';
+                element.style.bottom = '';
+                element.style.height = '';
+                element.style.maxHeight = '';
+                element.style.transform = '';
+                
+                // Get current position from getBoundingClientRect for accurate starting position
+                const rect = element.getBoundingClientRect();
+                xOffset = rect.left;
+                yOffset = rect.top;
+            } else {
+                // Get current position from computed style (not from getBoundingClientRect which might be stale)
+                const computedStyle = window.getComputedStyle(element);
+                const currentLeft = parseFloat(computedStyle.left) || 0;
+                const currentTop = parseFloat(computedStyle.top) || 0;
+                
+                // Account for transform if present
+                let transformX = 0;
+                let transformY = 0;
+                const transform = computedStyle.transform;
+                if (transform && transform !== 'none') {
+                    const matrix = new DOMMatrix(transform);
+                    transformX = matrix.e;
+                    transformY = matrix.f;
+                }
+                
+                xOffset = currentLeft + transformX;
+                yOffset = currentTop + transformY;
             }
-            
-            xOffset = currentLeft + transformX;
-            yOffset = currentTop + transformY;
             
             initialX = clientX - xOffset;
             initialY = clientY - yOffset;
@@ -2980,7 +3264,7 @@ export class Game {
 
         const checkCollapse = () => {
             const rect = element.getBoundingClientRect();
-            if (rect.width < 400) {
+            if (rect.width < 500) {
                 element.classList.add('collapsed');
             } else {
                 element.classList.remove('collapsed');
@@ -3007,8 +3291,11 @@ export class Game {
         };
 
         const handleMouseMove = (e) => {
-            e.preventDefault();
-            handleMove(e.clientX, e.clientY);
+            // Only prevent default and handle move when actually dragging
+            if (isDragging) {
+                e.preventDefault();
+                handleMove(e.clientX, e.clientY);
+            }
         };
 
         const handleTouchMove = (e) => {
@@ -3031,6 +3318,40 @@ export class Game {
                     // Check if panel should be collapsed
                     checkCollapse();
                     
+                    // Check if near screen edges for sticky snapping
+                    const rect = element.getBoundingClientRect();
+                    const edgeThreshold = 50; // pixels from edge
+                    
+                    // Check left edge
+                    if (rect.left < edgeThreshold) {
+                        element.style.left = '0';
+                        element.style.right = 'auto';
+                        element.classList.add('sticky-left', 'collapsed');
+                        element.dataset.sticky = 'left';
+                        // Update star name display format
+                        this.updateStarNameDisplay();
+                    }
+                    // Check right edge
+                    else if (rect.right > window.innerWidth - edgeThreshold) {
+                        element.style.right = '0';
+                        element.style.left = 'auto';
+                        element.classList.add('sticky-right', 'collapsed');
+                        element.dataset.sticky = 'right';
+                        // Update star name display format
+                        this.updateStarNameDisplay();
+                    }
+                    // Not near edge - remove sticky
+                    else {
+                        element.classList.remove('sticky-left', 'sticky-right');
+                        element.dataset.sticky = '';
+                        // Remove collapsed class when not snapped (but keep if width < 500)
+                        if (rect.width >= 500) {
+                            element.classList.remove('collapsed');
+                        }
+                        // Update star name display format
+                        this.updateStarNameDisplay();
+                    }
+                } else if (element.id === 'settings-panel') {
                     // Check if near screen edges for sticky snapping
                     const rect = element.getBoundingClientRect();
                     const edgeThreshold = 50; // pixels from edge
@@ -3065,34 +3386,104 @@ export class Game {
     }
 
     makeResizable(element) {
-        const resizeHandle = element.querySelector('.resize-handle');
-        if (!resizeHandle) return;
+        const cornerHandle = element.querySelector('.resize-handle-corner');
+        const topHandle = element.querySelector('.resize-handle-top');
+        const rightHandle = element.querySelector('.resize-handle-right');
+        const bottomHandle = element.querySelector('.resize-handle-bottom');
+        const leftHandle = element.querySelector('.resize-handle-left');
+        
+        if (!cornerHandle && !topHandle && !rightHandle && !bottomHandle && !leftHandle) return;
 
         let isResizing = false;
-        let startX, startY, startWidth, startHeight;
+        let resizeType = null; // 'corner', 'top', 'right', 'bottom', 'left'
+        let startX, startY, startWidth, startHeight, startTop, startLeft;
+        
+        // Function to check if panel should be collapsed (1 column layout)
+        const checkCollapse = () => {
+            const rect = element.getBoundingClientRect();
+            if (rect.width < 500) {
+                element.classList.add('collapsed');
+            } else {
+                element.classList.remove('collapsed');
+            }
+        };
 
-        resizeHandle.addEventListener('mousedown', (e) => {
+        const startResize = (e, type) => {
             e.preventDefault();
             e.stopPropagation();
             
             isResizing = true;
+            resizeType = type;
             startX = e.clientX;
             startY = e.clientY;
-            startWidth = parseInt(window.getComputedStyle(element).width, 10);
-            startHeight = parseInt(window.getComputedStyle(element).height, 10);
+            
+            // Get current dimensions and position
+            const computedStyle = window.getComputedStyle(element);
+            startWidth = parseInt(computedStyle.width, 10);
+            startHeight = parseInt(computedStyle.height, 10);
+            startTop = parseInt(computedStyle.top, 10) || element.getBoundingClientRect().top;
+            startLeft = parseInt(computedStyle.left, 10) || element.getBoundingClientRect().left;
             
             document.addEventListener('mousemove', handleResize);
             document.addEventListener('mouseup', stopResize);
-        });
+        };
+
+        // Attach event listeners to all handles
+        if (cornerHandle) {
+            cornerHandle.addEventListener('mousedown', (e) => startResize(e, 'corner'));
+        }
+        if (topHandle) {
+            topHandle.addEventListener('mousedown', (e) => startResize(e, 'top'));
+        }
+        if (rightHandle) {
+            rightHandle.addEventListener('mousedown', (e) => startResize(e, 'right'));
+        }
+        if (bottomHandle) {
+            bottomHandle.addEventListener('mousedown', (e) => startResize(e, 'bottom'));
+        }
+        if (leftHandle) {
+            leftHandle.addEventListener('mousedown', (e) => startResize(e, 'left'));
+        }
 
         const handleResize = (e) => {
-            if (!isResizing) return;
+            if (!isResizing || !resizeType) return;
             
-            const width = startWidth + (e.clientX - startX);
-            const height = startHeight + (e.clientY - startY);
+            const isSticky = element.classList.contains('sticky-left') || element.classList.contains('sticky-right');
+            const isStickyLeft = element.classList.contains('sticky-left');
+            const isStickyRight = element.classList.contains('sticky-right');
+            
+            // Calculate new dimensions based on resize type
+            let width = startWidth;
+            let height = startHeight;
+            let newTop = startTop;
+            let newLeft = startLeft;
+            
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            switch (resizeType) {
+                case 'corner':
+                    width = startWidth + deltaX;
+                    height = startHeight + deltaY;
+                    break;
+                case 'top':
+                    height = startHeight - deltaY;
+                    newTop = startTop + deltaY;
+                    break;
+                case 'right':
+                    width = startWidth + deltaX;
+                    break;
+                case 'bottom':
+                    height = startHeight + deltaY;
+                    break;
+                case 'left':
+                    width = startWidth - deltaX;
+                    newLeft = startLeft + deltaX;
+                    break;
+            }
             
             // Apply min/max constraints
-            const minWidth = 560;
+            const minWidth = 280;
             const maxWidth = 800;
             const minHeight = 300;
             const maxHeight = window.innerHeight * 0.9;
@@ -3100,14 +3491,55 @@ export class Game {
             const constrainedWidth = Math.max(minWidth, Math.min(maxWidth, width));
             const constrainedHeight = Math.max(minHeight, Math.min(maxHeight, height));
             
-            element.style.width = `${constrainedWidth}px`;
-            element.style.height = `${constrainedHeight}px`;
-            element.style.maxWidth = 'none';
-            element.style.maxHeight = 'none';
+            // Adjust top/left if resizing from top or left
+            if (resizeType === 'top') {
+                const heightDiff = constrainedHeight - startHeight;
+                newTop = startTop - heightDiff;
+            } else if (resizeType === 'left') {
+                const widthDiff = constrainedWidth - startWidth;
+                newLeft = startLeft - widthDiff;
+            }
+            
+            // If sticky and resizing, maintain sticky state while adjusting dimensions
+            if (isSticky && (resizeType === 'corner' || resizeType === 'right' || resizeType === 'left' || resizeType === 'top' || resizeType === 'bottom')) {
+                // Allow width/height adjustment while maintaining sticky state
+                if (resizeType === 'corner' || resizeType === 'right' || resizeType === 'left') {
+                    element.style.width = `${constrainedWidth}px`;
+                }
+                if (resizeType === 'corner' || resizeType === 'bottom' || resizeType === 'top') {
+                    element.style.height = `${constrainedHeight}px`;
+                }
+                
+                // Update layout based on new width
+                if (element.id === 'star-controls-panel') {
+                    checkCollapse();
+                }
+            } else {
+                // Normal resize
+                element.style.width = `${constrainedWidth}px`;
+                if (resizeType === 'corner' || resizeType === 'bottom' || resizeType === 'top') {
+                    element.style.height = `${constrainedHeight}px`;
+                }
+                element.style.maxWidth = 'none';
+                element.style.maxHeight = 'none';
+                
+                // Adjust position for top/left resizing
+                if (resizeType === 'top') {
+                    element.style.top = `${newTop}px`;
+                } else if (resizeType === 'left') {
+                    element.style.left = `${newLeft}px`;
+                }
+                
+                // Update layout based on new width
+                if (element.id === 'star-controls-panel') {
+                    checkCollapse();
+                }
+            }
         };
 
         const stopResize = () => {
             isResizing = false;
+            resizeType = null;
             document.removeEventListener('mousemove', handleResize);
             document.removeEventListener('mouseup', stopResize);
         };
@@ -3176,7 +3608,13 @@ export class Game {
 
         // Resume audio context if suspended (browser autoplay policy)
         if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+            this.audioContext.resume().catch(() => {
+                // Silently fail if resume fails
+            });
+            // Don't proceed if context is still suspended
+            if (this.audioContext.state === 'suspended') {
+                return;
+            }
         }
 
         try {
@@ -3242,7 +3680,13 @@ export class Game {
 
         // Resume audio context if suspended (browser autoplay policy)
         if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+            this.audioContext.resume().catch(() => {
+                // Silently fail if resume fails
+            });
+            // Don't proceed if context is still suspended
+            if (this.audioContext.state === 'suspended') {
+                return;
+            }
         }
 
         try {
@@ -3314,7 +3758,13 @@ export class Game {
 
         // Resume audio context if suspended (browser autoplay policy)
         if (this.audioContext.state === 'suspended') {
-            this.audioContext.resume();
+            this.audioContext.resume().catch(() => {
+                // Silently fail if resume fails
+            });
+            // Don't proceed if context is still suspended
+            if (this.audioContext.state === 'suspended') {
+                return;
+            }
         }
 
         try {
@@ -3335,7 +3785,7 @@ export class Game {
             // Smooth, elegant envelope: gentle attack and release
             const now = this.audioContext.currentTime;
             const duration = 0.12; // Slightly longer for elegance
-            const gain = 0.12 * this.sfxVolume; // Slightly quieter for refinement
+            const gain = 0.15 * this.sfxVolume; // Match volume with other sliders
             
             // Smooth attack and release curves
             gainNode.gain.setValueAtTime(0, now);
@@ -3669,10 +4119,7 @@ export class Game {
                 this.currentStar = project;
                 
                 // Update star name in title bar
-                const starNameElement = document.getElementById('current-star-name');
-                if (starNameElement) {
-                    starNameElement.textContent = ` - ${project.label}`;
-                }
+                this.updateStarNameDisplay(project);
                 
                 const starControlsPanel = document.getElementById('star-controls-panel');
                 const starSelector = document.getElementById('star-selector');
@@ -3691,14 +4138,6 @@ export class Game {
                 if (this.updateControlsFromProject) {
                     this.updateControlsFromProject(project);
                 }
-                
-                // Show modify button when near a star
-                if (!this.modifyButtonVisible || this.currentNearbyStar !== project) {
-                    this.showModifyButton(project);
-                }
-            } else if (!isInBoundary && wasInBoundary && this.currentNearbyStar === project) {
-                // Hide modify button when leaving star
-                this.hideModifyButton();
             }
             
             // Clear current star when leaving boundary
@@ -3709,15 +4148,6 @@ export class Game {
                 if (starNameElement) {
                     starNameElement.textContent = '';
                 }
-                // Hide modify button if it was showing for this star
-                if (this.currentNearbyStar === project) {
-                    this.hideModifyButton();
-                }
-            }
-            
-            // Update modify button position if visible and near this star
-            if (isInBoundary && this.modifyButtonVisible && this.currentNearbyStar === project) {
-                this.updateModifyButtonPosition(project);
             }
             
             // Auto-close removed - panel stays open once opened
@@ -3734,10 +4164,14 @@ export class Game {
                     this.projectMessageCooldowns.set(project, currentTime);
                     
                     // Force a comment when entering project boundary
+                    // Don't await - let it run asynchronously
                     this.guide.generateEntryComment(project, charPos).then(comment => {
                         if (comment) {
                             this.showThoughtBubble(comment, 5000);
                         }
+                    }).catch(error => {
+                        console.error('Error generating entry comment:', error);
+                        // Don't let errors freeze the game
                     });
                 }
             }
@@ -3772,7 +4206,8 @@ export class Game {
     render() {
         // Hide nametags on mobile
         const renderNametags = !this.input.isTouchDevice;
-        this.world.render(this.camera, this.character, this.maxProximityValue, true, true, null, null, renderNametags);
+        // Pass currentStar to show modify text in nameplate when in boundary
+        this.world.render(this.camera, this.character, this.maxProximityValue, true, true, null, null, renderNametags, this.currentStar);
         // Render click effects on top
         const ctx = this.world.getCanvas().getContext('2d');
         this.renderClickEffects(ctx, this.camera);

@@ -121,6 +121,8 @@ body {
     image-rendering: crisp-edges;
     z-index: 1000;
     cursor: grab;
+    user-select: auto !important; /* Allow scrollbar dragging */
+    -webkit-user-select: auto !important;
 }
 
 #tutorial button,
@@ -190,6 +192,12 @@ body {
     cursor: grabbing;
 }
 
+.menu-title-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 .menu-title {
     font-size: 0.875rem;
     font-weight: 700;
@@ -202,15 +210,38 @@ body {
 }
 
 .star-name-display {
-    margin-left: 0.75rem;
     font-weight: 500;
     text-transform: none;
     color: var(--color-blue-400);
     opacity: 0.9;
+    font-size: 0.75rem;
+    font-family: 'Courier New', 'Consolas', monospace;
 }
 
 .star-name-display:empty {
     display: none;
+}
+
+/* When panel is not snapped, show star name inline with dash */
+#star-controls-panel:not(.sticky-left):not(.sticky-right) .menu-title-container {
+    flex-direction: row;
+    align-items: center;
+}
+
+#star-controls-panel:not(.sticky-left):not(.sticky-right) .star-name-display {
+    margin-left: 0.75rem;
+}
+
+/* When panel is snapped, show star name below title without dash */
+#star-controls-panel.sticky-left .menu-title-container,
+#star-controls-panel.sticky-right .menu-title-container {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+#star-controls-panel.sticky-left .star-name-display,
+#star-controls-panel.sticky-right .star-name-display {
+    margin-left: 0;
 }
 
 /* Menu Close Button (X in title bar) */
@@ -402,7 +433,7 @@ body {
     max-width: 280px;
     font-size: 0.875rem;
     line-height: 1.4;
-    z-index: 1100; /* Changed from 100 to appear above star controls panel (1000) */
+    z-index: 900; /* Below menus (1002) but above canvas */
     border: 2px solid var(--color-blue-500);
     font-weight: 500;
     color: var(--color-offwhite-200);
@@ -754,17 +785,23 @@ body {
     top: 50%;
     transform: translateY(-50%);
     background: var(--color-midnight-800); /* Solid dark midnight background */
-    padding: 1rem;
-    border: 2px solid var(--color-blue-500); /* Blue border to match menu */
-    box-shadow: 6px 6px 0 var(--color-shadow-xl), 0 0 20px rgba(74, 144, 226, 0.2); /* Blue glow to match menu */
+    padding: 0;
+    border: 3px solid var(--color-midnight-600);
+    border-radius: 8px;
+    box-shadow: 4px 4px 0 var(--color-shadow-xl);
     z-index: 1002; /* Above toggle buttons (1001) */
     min-width: 200px;
-    max-width: 250px;
+    max-width: 400px;
+    height: 70vh;
+    max-height: 70vh;
     image-rendering: crisp-edges;
     font-family: 'Courier New', 'Consolas', monospace;
     cursor: grab;
-    border-radius: 0;
-    position: relative; /* Needed for absolute positioning of title bar */
+    user-select: none;
+    resize: none; /* Prevent default browser resize */
+    display: flex;
+    flex-direction: column;
+    overflow: visible; /* Allow title bar and resize handle to extend beyond */
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -778,16 +815,33 @@ body {
     width: calc(100% + 6px); /* Full width including borders */
     height: 2.5rem; /* Fixed height */
     margin: 0;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    z-index: 1001; /* Above content */
+    border-top-left-radius: 8px; /* Match panel border-radius */
+    border-top-right-radius: 8px;
+    overflow: hidden; /* Ensure border-radius is respected */
+    z-index: 1001; /* Above content but scrollbar should be visible */
     box-sizing: border-box;
-    pointer-events: auto;
+    pointer-events: auto; /* Allow interaction with title bar */
+}
+
+/* Scrollable content area for settings panel */
+#settings-panel > .settings-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1.5rem;
+    padding-right: calc(1.5rem + 12px);
+    margin-top: calc(2.5rem - 3px); /* Start below title bar (2.5rem height - 3px border) */
+    margin-bottom: 24px; /* Space for resize handle section (24px height) */
+    min-height: 0; /* Allow flex shrinking */
+    position: relative; /* Create stacking context for scrollbar */
+    z-index: 10; /* Above panel background, below title bar and resize handle */
+    user-select: auto !important; /* Allow text selection and scrollbar dragging */
+    -webkit-user-select: auto !important;
 }
 
 /* Settings panel content should start below title bar */
-#settings-panel > .settings-section:first-of-type {
-    margin-top: calc(2.5rem + 0.5rem); /* Title bar height + small gap */
+#settings-panel > .settings-content > .settings-section:first-of-type {
+    margin-top: 0; /* No extra margin needed, padding handles spacing */
 }
 
 #star-controls-panel .menu-title-bar {
@@ -821,6 +875,224 @@ body {
     animation: settingsPanelFadeIn 0.2s ease-out;
 }
 
+/* Resize Handle Section for Settings Panel */
+#settings-panel .resize-handle {
+    position: absolute;
+    z-index: 1002; /* Above scrollbar and content */
+    background: transparent; /* Transparent background */
+    box-sizing: border-box;
+}
+
+/* Corner resize handle (bottom-right) */
+#settings-panel .resize-handle-corner {
+    bottom: -3px; /* Extend below to cover border */
+    right: -3px; /* Extend right to cover border */
+    width: 24px;
+    height: 24px;
+    cursor: nwse-resize;
+    border-bottom-right-radius: 8px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding: 4px;
+}
+
+/* Top edge resize handle */
+#settings-panel .resize-handle-top {
+    top: -3px;
+    left: 0;
+    right: 24px; /* Leave space for corner handle */
+    height: 8px;
+    cursor: ns-resize;
+}
+
+/* Right edge resize handle */
+#settings-panel .resize-handle-right {
+    top: 0;
+    right: -3px;
+    bottom: 24px; /* Leave space for corner handle */
+    width: 8px;
+    cursor: ew-resize;
+}
+
+/* Bottom edge resize handle */
+#settings-panel .resize-handle-bottom {
+    bottom: -3px;
+    left: 0;
+    right: 24px; /* Leave space for corner handle */
+    height: 8px;
+    cursor: ns-resize;
+}
+
+/* Left edge resize handle */
+#settings-panel .resize-handle-left {
+    top: 0;
+    left: -3px;
+    bottom: 0;
+    width: 8px;
+    cursor: ew-resize;
+}
+
+/* Resize icon SVG styling (corner handle only) */
+#settings-panel .resize-handle-corner svg {
+    width: 16px;
+    height: 16px;
+    color: var(--color-midnight-600);
+    opacity: 0.6;
+    display: block;
+    flex-shrink: 0;
+}
+
+#settings-panel .resize-handle-corner:hover svg {
+    color: var(--color-blue-500);
+    opacity: 1;
+}
+
+#settings-panel .resize-handle-corner:active svg {
+    color: var(--color-blue-400);
+    opacity: 1;
+}
+
+/* Edge handle hover effects */
+#settings-panel .resize-handle-top:hover,
+#settings-panel .resize-handle-right:hover,
+#settings-panel .resize-handle-bottom:hover,
+#settings-panel .resize-handle-left:hover {
+    background: rgba(74, 144, 226, 0.1);
+}
+
+/* Sticky panel states for settings */
+#settings-panel.sticky-left {
+    position: fixed !important;
+    left: 0 !important;
+    right: auto !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    min-width: 200px;
+    max-width: 600px;
+}
+
+/* Move scrollbar to left when sticky-left */
+#settings-panel.sticky-left > .settings-content {
+    direction: rtl; /* Flips scrollbar to left side */
+    padding-left: calc(1.5rem + 12px); /* Account for scrollbar on left */
+    padding-right: 1.5rem; /* Normal padding on right */
+}
+
+/* Reset text direction for content when sticky-left */
+#settings-panel.sticky-left .settings-content {
+    direction: ltr; /* Keep text normal direction */
+}
+
+#settings-panel.sticky-right {
+    position: fixed !important;
+    right: 0 !important;
+    left: auto !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    transform: none !important;
+    min-width: 200px;
+    max-width: 600px;
+}
+
+/* Custom Scrollbar for Settings Panel */
+#settings-panel > .settings-content::-webkit-scrollbar {
+    width: 18px;
+    position: relative;
+    z-index: 100; /* Ensure scrollbar is visible above content */
+    pointer-events: auto;
+}
+
+#settings-panel > .settings-content::-webkit-scrollbar-track {
+    background: var(--color-midnight-800);
+    border-radius: 9px;
+    margin: 0;
+    margin-top: 4px;
+    margin-bottom: calc(24px + 4px);
+    margin-right: 4px;
+    pointer-events: auto;
+}
+
+/* Adjust scrollbar track margin for sticky-left */
+#settings-panel.sticky-left > .settings-content::-webkit-scrollbar-track {
+    margin-right: 0;
+    margin-left: 4px;
+}
+
+#settings-panel > .settings-content::-webkit-scrollbar-thumb {
+    background: 
+        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%),
+        linear-gradient(90deg, var(--color-midnight-600) 0%, rgba(58, 63, 78, 0.8) 50%, var(--color-midnight-600) 100%);
+    border-radius: 9px;
+    border: 2px solid var(--color-midnight-800);
+    min-height: 50px;
+    position: relative;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+    cursor: grab;
+}
+
+#settings-panel > .settings-content::-webkit-scrollbar-thumb:active {
+    cursor: grabbing;
+}
+
+#settings-panel > .settings-content::-webkit-scrollbar-thumb:hover {
+    background: 
+        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.15) 100%),
+        linear-gradient(90deg, var(--color-blue-500) 0%, rgba(74, 144, 226, 0.7) 50%, var(--color-blue-500) 100%);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+/* Firefox scrollbar */
+#settings-panel > .settings-content {
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-midnight-600) var(--color-midnight-800);
+}
+
+/* Mobile: settings panel centered */
+@media (max-width: 768px) {
+    #settings-panel {
+        position: fixed;
+        left: 50% !important;
+        right: auto !important;
+        top: 50% !important;
+        bottom: auto !important;
+        transform: translate(-50%, -50%) !important;
+        width: calc(100vw - 2rem);
+        max-width: calc(100vw - 2rem);
+        min-width: unset;
+        height: 70vh;
+        max-height: 70vh;
+        border-radius: 8px;
+        margin: 0;
+    }
+    
+    #settings-panel.sticky-left,
+    #settings-panel.sticky-right {
+        /* Override sticky on mobile */
+        position: fixed !important;
+        left: 50% !important;
+        right: auto !important;
+        top: 50% !important;
+        bottom: auto !important;
+        transform: translate(-50%, -50%) !important;
+        height: 70vh !important;
+        max-height: 70vh !important;
+        width: calc(100vw - 2rem) !important;
+        max-width: calc(100vw - 2rem) !important;
+        border-radius: 8px !important;
+    }
+}
+
 @keyframes settingsPanelFadeIn {
     from {
         opacity: 0;
@@ -839,7 +1111,7 @@ body {
     border: 3px solid var(--color-midnight-600);
     border-radius: 8px;
     padding: 0;
-    min-width: 560px;
+    min-width: 280px;
     max-width: 640px;
     max-height: 75vh;
     z-index: 1002; /* Above toggle buttons (1001) */
@@ -859,23 +1131,74 @@ body {
 /* Resize Handle Section - separate bottom section like title bar */
 #star-controls-panel .resize-handle {
     position: absolute;
+    z-index: 1002; /* Above scrollbar and content */
+    background: transparent; /* Transparent background */
+    box-sizing: border-box;
+}
+
+/* Corner resize handle (bottom-right) */
+#star-controls-panel .resize-handle-corner {
     bottom: -3px; /* Extend below to cover border */
     right: -3px; /* Extend right to cover border */
     width: 24px;
     height: 24px;
     cursor: nwse-resize;
-    z-index: 1002; /* Above scrollbar and content */
     border-bottom-right-radius: 8px;
-    background: transparent; /* Transparent background */
     display: flex;
     align-items: flex-end;
     justify-content: flex-end;
     padding: 4px;
-    box-sizing: border-box;
 }
 
-/* Resize icon SVG styling */
-#star-controls-panel .resize-handle svg {
+/* Top edge resize handle */
+#star-controls-panel .resize-handle-top {
+    top: -3px;
+    left: 0;
+    right: 24px; /* Leave space for corner handle */
+    height: 8px;
+    cursor: ns-resize;
+}
+
+/* Right edge resize handle */
+#star-controls-panel .resize-handle-right {
+    top: 0;
+    right: -3px;
+    bottom: 24px; /* Leave space for corner handle */
+    width: 8px;
+    cursor: ew-resize;
+}
+
+/* Bottom edge resize handle */
+#star-controls-panel .resize-handle-bottom {
+    bottom: -3px;
+    left: 0;
+    right: 24px; /* Leave space for corner handle */
+    height: 8px;
+    cursor: ns-resize;
+}
+
+/* Left edge resize handle */
+#star-controls-panel .resize-handle-left {
+    top: 0;
+    left: -3px;
+    bottom: 0;
+    width: 8px;
+    cursor: ew-resize;
+}
+
+/* Ensure resize handles don't block scrollbar when not actively resizing */
+#star-controls-panel .resize-handle-left:not(:active) {
+    pointer-events: auto; /* Allow interaction, but scrollbar has higher z-index in scroll area */
+}
+
+/* When sticky-left, ensure left resize handle doesn't interfere with scrollbar */
+#star-controls-panel.sticky-left .resize-handle-left {
+    /* Scrollbar is inside padding area, handle is at edge, so no overlap */
+    /* But ensure scrollbar area is clickable */
+}
+
+/* Resize icon SVG styling (corner handle only) */
+#star-controls-panel .resize-handle-corner svg {
     width: 16px;
     height: 16px;
     color: var(--color-midnight-600);
@@ -884,43 +1207,59 @@ body {
     flex-shrink: 0;
 }
 
-#star-controls-panel .resize-handle:hover svg {
+#star-controls-panel .resize-handle-corner:hover svg {
     color: var(--color-blue-500);
     opacity: 1;
 }
 
-#star-controls-panel .resize-handle:active svg {
+#star-controls-panel .resize-handle-corner:active svg {
     color: var(--color-blue-400);
     opacity: 1;
 }
 
+/* Edge handle hover effects */
+#star-controls-panel .resize-handle-top:hover,
+#star-controls-panel .resize-handle-right:hover,
+#star-controls-panel .resize-handle-bottom:hover,
+#star-controls-panel .resize-handle-left:hover {
+    background: rgba(74, 144, 226, 0.1);
+}
+
+/* Remove inputs from general rule */
 #star-controls-panel button,
 #star-controls-panel select,
 #star-controls-panel label {
     cursor: default;
 }
 
-/* Ensure sliders have proper pointer events and cursor styles */
+/* Explicit slider styles with high specificity */
+#star-controls-panel .settings-option input[type="range"],
 #star-controls-panel input[type="range"] {
     cursor: pointer !important;
     pointer-events: auto !important;
-    z-index: 10;
+    z-index: 100 !important;
+    position: relative;
 }
 
+#star-controls-panel .settings-option input[type="range"]::-webkit-slider-thumb,
 #star-controls-panel input[type="range"]::-webkit-slider-thumb {
     cursor: grab !important;
     pointer-events: auto !important;
+    -webkit-appearance: none !important;
 }
 
+#star-controls-panel .settings-option input[type="range"]::-webkit-slider-thumb:active,
 #star-controls-panel input[type="range"]::-webkit-slider-thumb:active {
     cursor: grabbing !important;
 }
 
+#star-controls-panel .settings-option input[type="range"]::-moz-range-thumb,
 #star-controls-panel input[type="range"]::-moz-range-thumb {
     cursor: grab !important;
     pointer-events: auto !important;
 }
 
+#star-controls-panel .settings-option input[type="range"]::-moz-range-thumb:active,
 #star-controls-panel input[type="range"]::-moz-range-thumb:active {
     cursor: grabbing !important;
 }
@@ -937,6 +1276,8 @@ body {
     min-height: 0; /* Allow flex shrinking */
     position: relative; /* Create stacking context for scrollbar */
     z-index: 10; /* Above panel background, below title bar and resize handle */
+    user-select: auto !important; /* Allow text selection and scrollbar dragging - override panel's user-select: none */
+    -webkit-user-select: auto !important; /* Webkit browsers */
 }
 
 /* 2-column layout for star controls panel */
@@ -944,6 +1285,7 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
+    min-width: 0; /* Allow grid to shrink */
 }
 
 /* Full width sections (like star selection) */
@@ -968,14 +1310,56 @@ body {
 }
 
 /* Collapsed single-column mode */
+#star-controls-panel.collapsed > .star-controls-grid {
+    padding: 1rem; /* Reduce padding in collapsed mode */
+    padding-right: calc(1rem + 12px); /* Account for scrollbar */
+}
+
+/* Collapsed + sticky-left: adjust padding for left scrollbar */
+#star-controls-panel.collapsed.sticky-left > .star-controls-grid {
+    padding-left: calc(1rem + 12px); /* Account for scrollbar on left */
+    padding-right: 1rem; /* Normal padding on right */
+}
+
 #star-controls-panel.collapsed .star-controls-grid {
     grid-template-columns: 1fr !important;
     gap: 1rem;
 }
 
 #star-controls-panel.collapsed {
-    min-width: 280px;
+    min-width: 240px;
     max-width: 320px;
+}
+
+/* Reduce gaps and margins in collapsed mode */
+#star-controls-panel.collapsed .settings-section {
+    margin-bottom: 1rem; /* Slightly reduce margin */
+}
+
+#star-controls-panel.collapsed .settings-option {
+    margin-bottom: 1rem; /* Reduce spacing between options */
+}
+
+/* Ensure inputs and selects fit in collapsed mode */
+#star-controls-panel.collapsed input[type="text"],
+#star-controls-panel.collapsed input[type="range"],
+#star-controls-panel.collapsed select {
+    max-width: 100%;
+    min-width: 0;
+}
+
+/* Reduce font sizes slightly in collapsed mode if needed */
+#star-controls-panel.collapsed .slider-range-info {
+    font-size: 0.65rem; /* Slightly smaller */
+    gap: 0.25rem; /* Tighter gap */
+}
+
+#star-controls-panel.collapsed .slider-current {
+    font-size: 0.8rem; /* Slightly smaller */
+}
+
+#star-controls-panel.collapsed .slider-label {
+    font-size: 0.7rem; /* Slightly smaller */
 }
 
 /* Sticky panel states */
@@ -990,6 +1374,21 @@ body {
     border-radius: 0 !important;
     margin: 0 !important;
     transform: none !important;
+    /* Width is adjustable via resize handle */
+    min-width: 280px;
+    max-width: 800px;
+}
+
+/* Move scrollbar to left when sticky-left */
+#star-controls-panel.sticky-left > .star-controls-grid {
+    direction: rtl; /* Flips scrollbar to left side */
+    padding-left: calc(1.5rem + 12px); /* Account for scrollbar on left */
+    padding-right: 1.5rem; /* Normal padding on right */
+}
+
+/* Reset text direction for content when sticky-left */
+#star-controls-panel.sticky-left .star-controls-grid {
+    direction: ltr; /* Keep text normal direction */
 }
 
 #star-controls-panel.sticky-right {
@@ -1003,6 +1402,9 @@ body {
     border-radius: 0 !important;
     margin: 0 !important;
     transform: none !important;
+    /* Width is adjustable via resize handle */
+    min-width: 280px;
+    max-width: 800px;
 }
 
 /* Mobile: star controls panel takes up bottom half of screen */
@@ -1043,6 +1445,7 @@ body {
     width: 18px;
     position: relative;
     z-index: 100; /* Ensure scrollbar is visible above content */
+    pointer-events: auto; /* Ensure scrollbar is interactive */
 }
 
 #star-controls-panel > .star-controls-grid::-webkit-scrollbar-track {
@@ -1052,6 +1455,13 @@ body {
     margin-top: 4px; /* Small top margin to ensure it starts below title bar */
     margin-bottom: calc(24px + 4px); /* Clear resize handle (24px height + 4px gap) */
     margin-right: 4px; /* Right margin to avoid edge */
+    pointer-events: auto; /* Ensure track is clickable */
+}
+
+/* Adjust scrollbar track margin for sticky-left (scrollbar on left) */
+#star-controls-panel.sticky-left > .star-controls-grid::-webkit-scrollbar-track {
+    margin-right: 0;
+    margin-left: 4px; /* Left margin to avoid edge */
 }
 
 #star-controls-panel > .star-controls-grid::-webkit-scrollbar-thumb {
@@ -1063,6 +1473,12 @@ body {
     min-height: 50px;
     position: relative;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+    pointer-events: auto; /* Ensure scrollbar thumb is draggable */
+    cursor: grab; /* Show grab cursor */
+}
+
+#star-controls-panel > .star-controls-grid::-webkit-scrollbar-thumb:active {
+    cursor: grabbing; /* Show grabbing cursor when dragging */
 }
 
 #star-controls-panel > .star-controls-grid::-webkit-scrollbar-thumb::before {
@@ -1188,6 +1604,8 @@ input[type="color"]::-moz-color-swatch {
 /* Gradient Color Picker */
 .gradient-picker-container {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     margin-top: 0.5rem;
 }
 
@@ -1205,6 +1623,8 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     gap: 1rem;
     justify-content: space-between;
+    min-width: 0; /* Allow shrinking */
+    max-width: 100%; /* Prevent overflow */
 }
 
 .gradient-color-selector {
@@ -1212,6 +1632,8 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    min-width: 0; /* Allow shrinking */
+    max-width: 100%; /* Prevent overflow */
 }
 
 .gradient-color-label {
@@ -1422,6 +1844,8 @@ input[type="color"]::-moz-color-swatch {
 
 .settings-section {
     margin-bottom: 1.25rem;
+    min-width: 0; /* Allow shrinking */
+    max-width: 100%; /* Prevent overflow */
 }
 
 /* Settings panel: first section needs margin-top to clear title bar */
@@ -1458,10 +1882,14 @@ input[type="color"]::-moz-color-swatch {
     display: flex;
     gap: 0.5rem;
     margin-bottom: 1rem;
+    min-width: 0; /* Allow shrinking */
+    max-width: 100%; /* Prevent overflow */
 }
 
 #preset-name-input {
     flex: 1;
+    min-width: 0; /* Allow shrinking */
+    max-width: 100%; /* Prevent overflow */
     padding: 0.5rem;
     font-family: 'Courier New', 'Consolas', monospace;
     background: var(--color-midnight-700);
@@ -1504,6 +1932,8 @@ input[type="color"]::-moz-color-swatch {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 0.75rem;
+    min-width: 0; /* Allow shrinking */
+    max-width: 100%; /* Prevent overflow */
 }
 
 .preset-item {
@@ -1833,6 +2263,8 @@ input[type="color"]::-moz-color-swatch {
 
 .settings-option {
     margin-bottom: 1.5rem;
+    min-width: 0; /* Allow shrinking below content size */
+    max-width: 100%; /* Prevent overflow */
 }
 
 .settings-option label {
@@ -1846,6 +2278,8 @@ input[type="color"]::-moz-color-swatch {
 
 .settings-option input[type="range"] {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     -webkit-appearance: none;
     appearance: none;
     height: 6px;
@@ -2013,6 +2447,8 @@ input[type="color"]::-moz-color-swatch {
     align-items: center;
     margin-bottom: 0.25rem;
     gap: 0.5rem;
+    min-width: 0; /* Allow flex shrinking */
+    max-width: 100%; /* Prevent overflow */
 }
 
 .slider-min,
@@ -2039,13 +2475,18 @@ input[type="color"]::-moz-color-swatch {
     text-align: center;
     flex: 1;
     user-select: none;
-    min-width: 4ch;
+    min-width: 0; /* Allow shrinking */
+    overflow: hidden; /* Prevent text overflow */
+    text-overflow: ellipsis; /* Show ellipsis if text is too long */
 }
 
 .slider-track {
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
     margin-top: 0.25rem;
     position: relative;
+    overflow: visible; /* Allow slider thumb to extend if needed */
 }
 
 /* Tick marks/graduation points underneath slider track */
@@ -2132,6 +2573,13 @@ input[type="color"]::-moz-color-swatch {
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+#star-controls-toggle-btn svg {
+    flex-shrink: 0;
 }
 
 #star-controls-toggle-btn:hover {
@@ -2188,33 +2636,46 @@ input[type="color"]::-moz-color-swatch {
     background: var(--color-blue-400);
 }
 
-/* Floating Modify Button */
-.floating-modify-btn {
+/* Randomize Stars Button (UI Overlay) */
+#randomize-stars-ui-btn {
     position: fixed;
-    z-index: 1003; /* Above star controls panel */
-    padding: 0.75rem 1.5rem;
-    background: var(--color-blue-500);
+    right: 1rem;
+    top: 10rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-midnight-800);
     color: var(--color-offwhite-50);
-    border: 2px solid var(--color-blue-400);
-    border-radius: 4px;
-    font-family: 'Courier New', 'Consolas', monospace;
-    font-weight: 700;
-    font-size: 0.875rem;
+    border: 2px solid var(--color-midnight-800);
+    border-radius: 0;
     cursor: pointer;
-    box-shadow: 4px 4px 0 var(--color-shadow-xl);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    pointer-events: auto;
-}
-
-.floating-modify-btn:hover {
-    background: var(--color-blue-400);
-    transform: translate(1px, 1px);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    z-index: 1001;
+    image-rendering: crisp-edges;
     box-shadow: 2px 2px 0 var(--color-shadow-xl);
+    transition: all 0.1s ease;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
-.floating-modify-btn:active {
-    transform: translate(2px, 2px);
+#randomize-stars-ui-btn:hover {
+    background: var(--color-midnight-700);
+    box-shadow: 2px 2px 0 var(--color-shadow-2xl);
+}
+
+#randomize-stars-ui-btn:active {
+    transform: translate(1px, 1px);
     box-shadow: none;
+}
+
+#randomize-stars-ui-btn svg {
+    flex-shrink: 0;
 }
 
 /* Logo - Rusty Orange Style */
@@ -2248,6 +2709,15 @@ input[type="color"]::-moz-color-swatch {
     flex-direction: row;
     gap: 1rem;
     align-items: stretch;
+}
+
+/* Stack buttons vertically when panel is collapsed */
+#star-controls-panel.collapsed .action-buttons-container {
+    flex-direction: column;
+}
+
+#star-controls-panel.collapsed .action-buttons-container button {
+    width: 100%;
 }
 
 #activate-all-stars-btn {

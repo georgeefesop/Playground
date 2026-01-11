@@ -175,7 +175,7 @@ export class Project {
         return this.interpolateColor(this.color, this.colorNear, this.proximityValue);
     }
 
-    render(ctx, camera, renderNametag = true) {
+    render(ctx, camera, renderNametag = true, showModify = false) {
         // Projects are rendered inside the world transform context
         // So we use world coordinates directly
         // Check if on screen using world coordinates
@@ -650,8 +650,20 @@ export class Project {
             const textWidth = textMetrics.width;
             const textHeight = 16;
             const padding = 8;
-            const tagWidth = textWidth + padding * 2;
-            const tagHeight = textHeight + padding * 2;
+            
+            // Calculate modify text width if needed
+            let modifyTextWidth = 0;
+            let modifyTextHeight = 0;
+            if (showModify) {
+                ctx.font = 'normal 12px "Courier New", "Consolas", monospace';
+                modifyTextWidth = ctx.measureText('modify').width;
+                modifyTextHeight = 12; // Font size
+            }
+            
+            // Use the wider of the two texts for tag width
+            const tagWidth = Math.max(textWidth, modifyTextWidth) + padding * 2;
+            const lineSpacing = showModify ? 4 : 0;
+            const tagHeight = textHeight + (showModify ? modifyTextHeight + lineSpacing : 0) + padding * 2;
             const tagY = this.size * 0.5 + 20;
 
             // Draw nametag background - dark theme to match message bubbles
@@ -688,12 +700,55 @@ export class Project {
             ctx.lineWidth = 2;
             ctx.strokeRect(-tagWidth / 2, tagY, tagWidth, tagHeight);
 
-            // Draw text - light color
+            // Draw star name text - light color
             ctx.fillStyle = offwhite200;
             ctx.font = 'bold 14px "Courier New", "Consolas", monospace';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(this.label, 0, tagY + tagHeight / 2);
+            const nameY = showModify ? tagY + padding + textHeight / 2 : tagY + tagHeight / 2;
+            ctx.fillText(this.label, 0, nameY);
+
+            // Draw modify text if needed
+            if (showModify) {
+                ctx.font = 'normal 12px "Courier New", "Consolas", monospace';
+                ctx.textBaseline = 'middle';
+                const modifyY = tagY + padding + textHeight + lineSpacing + 6;
+                
+                // Store entire nameplate bounds for click detection (in world coordinates)
+                this.nameplateBounds = {
+                    centerX: this.x,
+                    centerY: this.y + tagY + tagHeight / 2,
+                    width: tagWidth,
+                    height: tagHeight,
+                    worldY: this.y + tagY
+                };
+                
+                // Also store modify text bounds for reference
+                this.modifyTextBounds = {
+                    centerX: this.x,
+                    centerY: this.y + modifyY,
+                    width: modifyTextWidth,
+                    height: modifyTextHeight + 4, // Add some padding for easier clicking
+                    worldY: this.y + modifyY
+                };
+                
+                // Draw underline
+                const underlineY = modifyY + 6;
+                ctx.strokeStyle = offwhite200;
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(-modifyTextWidth / 2, underlineY);
+                ctx.lineTo(modifyTextWidth / 2, underlineY);
+                ctx.stroke();
+                
+                // Draw modify text
+                ctx.fillStyle = offwhite200;
+                ctx.fillText('modify', 0, modifyY);
+            } else {
+                // Clear bounds when not showing modify
+                this.nameplateBounds = null;
+                this.modifyTextBounds = null;
+            }
 
             ctx.restore();
         }
@@ -703,6 +758,40 @@ export class Project {
         const dx = this.x - x;
         const dy = this.y - y;
         return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    containsModifyTextPoint(x, y) {
+        // Check if point is within modify text bounds
+        if (!this.modifyTextBounds) {
+            return false;
+        }
+        
+        const bounds = this.modifyTextBounds;
+        const halfWidth = bounds.width / 2;
+        const halfHeight = bounds.height / 2;
+        
+        // Check if point is within the modify text rectangle
+        return x >= bounds.centerX - halfWidth &&
+               x <= bounds.centerX + halfWidth &&
+               y >= bounds.worldY - halfHeight &&
+               y <= bounds.worldY + halfHeight;
+    }
+
+    containsNameplatePoint(x, y) {
+        // Check if point is within entire nameplate bounds
+        if (!this.nameplateBounds) {
+            return false;
+        }
+        
+        const bounds = this.nameplateBounds;
+        const halfWidth = bounds.width / 2;
+        const halfHeight = bounds.height / 2;
+        
+        // Check if point is within the nameplate rectangle
+        return x >= bounds.centerX - halfWidth &&
+               x <= bounds.centerX + halfWidth &&
+               y >= bounds.worldY &&
+               y <= bounds.worldY + bounds.height;
     }
 
     getPosition() {

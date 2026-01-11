@@ -23,14 +23,30 @@
         <button id="settings-toggle-btn">⚙</button>
         
         <!-- Star Controls Toggle Button -->
-        <button id="star-controls-toggle-btn">⭐ Star Controls</button>
+        <button id="star-controls-toggle-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
+                <path d="M12 2L15.09 8.26L22 10L15.09 11.74L12 18L8.91 11.74L2 10L8.91 8.26L12 2Z" fill="currentColor"/>
+                <circle cx="12" cy="12" r="2" fill="var(--color-midnight-800)"/>
+            </svg>
+            <span>Star Controls</span>
+        </button>
         
         <!-- Activate All Stars Button (UI Overlay) -->
         <button id="activate-all-stars-ui-btn">⭐ Activate All Stars</button>
-
-        <!-- Floating Modify Button (appears near stars) -->
-        <button id="modify-star-btn" class="hidden floating-modify-btn">Modify</button>
-
+        
+        <!-- Randomize Stars Button (UI Overlay) -->
+        <button id="randomize-stars-ui-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
+                <path d="M6 2L3 6L6 10H18L21 6L18 2H6Z" fill="currentColor"/>
+                <path d="M6 14L3 18L6 22H18L21 18L18 14H6Z" fill="currentColor"/>
+                <circle cx="12" cy="6" r="1.5" fill="var(--color-midnight-800)"/>
+                <circle cx="12" cy="18" r="1.5" fill="var(--color-midnight-800)"/>
+                <path d="M9 12L15 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M12 9L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span>Randomize Stars</span>
+        </button>
+        
         <!-- Settings Panel -->
         <div id="settings-panel" class="hidden">
             <div class="menu-title-bar">
@@ -38,6 +54,7 @@
                 <button id="settings-close-btn" class="menu-close-btn">×</button>
             </div>
             
+            <div class="settings-content">
             <div class="settings-section">
                 <div class="settings-section-title">Background</div>
                 <div class="background-library" id="background-library">
@@ -107,12 +124,32 @@
                     </p>
                 </div>
             </div>
+            </div>
+            <!-- Corner resize handle (bottom-right) -->
+            <div class="resize-handle resize-handle-corner">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Grip dots pattern (3x3 grid in bottom-right corner) -->
+                    <circle cx="12" cy="4" r="1" fill="currentColor"/>
+                    <circle cx="12" cy="8" r="1" fill="currentColor"/>
+                    <circle cx="12" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="8" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="4" cy="12" r="1" fill="currentColor"/>
+                </svg>
+            </div>
+            <!-- Edge resize handles -->
+            <div class="resize-handle resize-handle-top"></div>
+            <div class="resize-handle resize-handle-right"></div>
+            <div class="resize-handle resize-handle-bottom"></div>
+            <div class="resize-handle resize-handle-left"></div>
         </div>
 
         <!-- Star Controls Panel -->
         <div id="star-controls-panel" class="hidden">
             <div class="menu-title-bar">
-                <div class="menu-title">Star Controls<span id="current-star-name" class="star-name-display"></span></div>
+                <div class="menu-title-container">
+                    <div class="menu-title">Star Controls</div>
+                    <div id="current-star-name" class="star-name-display"></div>
+                </div>
                 <button id="star-controls-close-btn" class="menu-close-btn">×</button>
             </div>
             
@@ -362,7 +399,8 @@
                     </div>
                 </div>
             </div>
-            <div class="resize-handle">
+            <!-- Corner resize handle (bottom-right) -->
+            <div class="resize-handle resize-handle-corner">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <!-- Grip dots pattern (3x3 grid in bottom-right corner) -->
                     <circle cx="12" cy="4" r="1" fill="currentColor"/>
@@ -372,6 +410,11 @@
                     <circle cx="4" cy="12" r="1" fill="currentColor"/>
                 </svg>
             </div>
+            <!-- Edge resize handles -->
+            <div class="resize-handle resize-handle-top"></div>
+            <div class="resize-handle resize-handle-right"></div>
+            <div class="resize-handle resize-handle-bottom"></div>
+            <div class="resize-handle resize-handle-left"></div>
         </div>
 
 

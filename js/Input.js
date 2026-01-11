@@ -45,11 +45,23 @@ export class Input {
 
         // Mouse click to move
         this.canvas.addEventListener('click', (e) => {
+            // Check if clicking on UI element - don't move character
+            const uiOverlay = document.getElementById('ui-overlay');
+            if (uiOverlay && (uiOverlay.contains(e.target) || e.target.closest('button, label, input, select, a'))) {
+                return; // Don't set clickTarget for UI clicks
+            }
+            
             const rect = this.canvas.getBoundingClientRect();
             const screenX = e.clientX - rect.left;
             const screenY = e.clientY - rect.top;
 
             const worldPos = this.camera.screenToWorld(screenX, screenY);
+            
+            // Check if clicking on nameplate - don't move character
+            if (window.game && window.game.currentStar && window.game.currentStar.containsNameplatePoint(worldPos.x, worldPos.y)) {
+                return; // Don't set clickTarget for nameplate clicks
+            }
+            
             this.clickTarget = worldPos;
         });
 

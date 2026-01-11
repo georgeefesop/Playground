@@ -8,7 +8,10 @@ export class Input {
 
         // Mouse/Touch
         this.clickTarget = null;
-        this.isTouchDevice = 'ontouchstart' in window;
+        // More robust mobile detection: touch support OR small screen width
+        this.isTouchDevice = 'ontouchstart' in window || 
+                            navigator.maxTouchPoints > 0 || 
+                            (window.innerWidth <= 768 && window.matchMedia('(pointer: coarse)').matches);
         this.mouseWorldPos = { x: 0, y: 0 };
         this.mouseHasMoved = false; // Track if mouse has moved over canvas
 

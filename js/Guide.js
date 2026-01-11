@@ -184,6 +184,31 @@ RESTRICTIONS:
         return comments[Math.floor(Math.random() * comments.length)];
     }
 
+    async generateEntryComment(nearbyProject, characterPosition) {
+        // Generate a comment when first entering a project's boundary
+        // This bypasses cooldown and distance checks to ensure at least one message
+        
+        this.lastCommentLocation = { ...characterPosition };
+        // Set a shorter cooldown for entry comments to allow follow-up comments
+        this.commentCooldown = 150;
+
+        // Entry-specific comments that are more focused on the project
+        const entryComments = [
+            `Oh! You've entered the boundary of "${nearbyProject.label}". This one's worth exploring.`,
+            `Ah, you're now within range of "${nearbyProject.label}". Take a closer look.`,
+            `Welcome to "${nearbyProject.label}" territory. George put a lot into this one.`,
+            `You've entered the area around "${nearbyProject.label}". Interesting, isn't it?`,
+            `Now you're near "${nearbyProject.label}". This project has a story to tell.`,
+            `"${nearbyProject.label}" is right here. Want to know more about it?`,
+            `You're in the zone for "${nearbyProject.label}". Pretty cool, right?`,
+            `"${nearbyProject.label}" is nearby. This is one of George's experiments.`,
+            `You've found "${nearbyProject.label}". Each project here is unique.`,
+            `"${nearbyProject.label}" is within reach. Feel free to interact with it.`,
+        ];
+
+        return entryComments[Math.floor(Math.random() * entryComments.length)];
+    }
+
     clearHistory() {
         this.conversationHistory = [];
     }

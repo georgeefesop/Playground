@@ -5,7 +5,7 @@ export class Character {
         this.targetX = x;
         this.targetY = y;
         this.size = 48;
-        this.baseSpeed = 2.5;
+        this.baseSpeed = 5.0; // Doubled from 2.5
         this.speedMultiplier = 1.5; // Default 1.5x
         this.speed = this.baseSpeed * this.speedMultiplier;
         this.angle = 0;
@@ -17,7 +17,8 @@ export class Character {
         this.isMoving = false;
         this.walkCycle = 0;
         this.animationFrame = 0;
-        this.animationSpeed = 0.15;
+        // Animation speed - cycles per second, scaled by movement speed
+        this.baseAnimationSpeed = 0.2; // Base animation speed multiplier
 
         // Direction: 0=down, 1=left, 2=right, 3=up
         this.direction = 0;
@@ -86,8 +87,10 @@ export class Character {
                 this.y += moveY;
             }
 
-            // Animate walk cycle
-            this.walkCycle += this.animationSpeed;
+            // Animate walk cycle - speed-based animation that scales smoothly with movement speed
+            // Animation speed scales with character speed to keep it synchronized
+            const speedRatio = this.speed / (this.baseSpeed * 1.5); // Normalize to default speed
+            this.walkCycle += this.baseAnimationSpeed * speedRatio;
             this.animationFrame = Math.floor(this.walkCycle) % this.framesPerDirection;
         } else {
             // Stop immediately when close enough
@@ -130,7 +133,7 @@ export class Character {
             ctx.shadowBlur = 20;
         }
 
-        // Draw sprite if loaded, otherwise fallback
+        // Draw sprite if loaded, otherwise don't render (sprite loads quickly)
         if (this.spriteLoaded) {
             // Calculate source position in sprite sheet
             const srcX = this.animationFrame * this.spriteWidth;
@@ -145,13 +148,8 @@ export class Character {
                 -this.size / 2, -this.size / 2,
                 this.size, this.size
             );
-        } else {
-            // Fallback: simple circle while loading
-            ctx.fillStyle = getCSSVar('--color-accent-indigo', '#6366f1');
-            ctx.beginPath();
-            ctx.arc(0, 0, this.size / 2, 0, Math.PI * 2);
-            ctx.fill();
         }
+        // No fallback - sprite loads quickly, so we just don't render until it's ready
 
         ctx.restore();
     }

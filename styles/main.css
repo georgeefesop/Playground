@@ -1,39 +1,59 @@
 /* Color Palette - CSS Custom Properties */
+/* Cohesive palette built around off-white and midnight dark */
 :root {
-    /* Primary Colors */
-    --color-black: #000000;
-    --color-white: #ffffff;
-    --color-dark-text: #1a1a1a;
+    /* 1. Midnight (Dark Base) */
+    --color-midnight-900: #0a0a0f;
+    --color-midnight-800: #1a1f2e;
+    --color-midnight-700: #2a2f3e;
+    --color-midnight-600: #3a3f4e;
     
-    /* Grays */
-    --color-gray-100: #fafafa;
-    --color-gray-200: #f8f8f8;
-    --color-gray-300: #f0f0f0;
-    --color-gray-400: #e0e0e0;
-    --color-gray-500: #333333;
-    --color-gray-600: #666666;
-    --color-gray-700: #999999;
+    /* 2. Off-White (Light Base) */
+    --color-offwhite-50: #ffffff;
+    --color-offwhite-100: #fafafa;
+    --color-offwhite-200: #f5f5f0;
+    --color-offwhite-300: #f0f0eb;
     
-    /* Background Colors */
-    --color-space-bg: #0a0a0f;
+    /* 3. Cool Blue (Accent) */
+    --color-blue-500: #4a90e2;
+    --color-blue-400: #6ba3e8;
+    --color-blue-600: #3a7bc8;
+    --color-blue-300: #8cb5ed;
     
-    /* Project/Star Colors */
-    --color-star-alpha-base: #1a1f2e;
-    --color-star-alpha-glow: #ff4444;
-    --color-star-beta-base: #f5f5f5;
-    --color-star-beta-glow: #ff8844;
+    /* 4. Warm Amber (Accent) */
+    --color-amber-500: #ff8844;
+    --color-amber-400: #ffa066;
+    --color-amber-600: #e66a22;
+    --color-amber-300: #ffb888;
     
-    /* Accent Colors */
-    --color-accent-indigo: #6366f1;
+    /* 5. Neutral Gray (Utility) */
+    --color-gray-900: #1a1a1a;
+    --color-gray-700: #4a4a4a;
+    --color-gray-500: #7a7a7a;
+    --color-gray-300: #b0b0b0;
+    --color-gray-100: #e0e0e0;
     
-    /* Shadow & Overlay Colors - Consolidated Scale */
-    --color-shadow-xs: rgba(0, 0, 0, 0.03);
-    --color-shadow-sm: rgba(0, 0, 0, 0.08);
-    --color-shadow-md: rgba(0, 0, 0, 0.1);
-    --color-shadow-lg: rgba(0, 0, 0, 0.15);
-    --color-shadow-xl: rgba(0, 0, 0, 0.2);
-    --color-shadow-2xl: rgba(0, 0, 0, 0.3);
-    --color-overlay: rgba(0, 0, 0, 0.5);
+    /* Shadow & Overlay System (using midnight base) */
+    --color-shadow-xs: rgba(10, 10, 15, 0.03);
+    --color-shadow-sm: rgba(10, 10, 15, 0.08);
+    --color-shadow-md: rgba(10, 10, 15, 0.1);
+    --color-shadow-lg: rgba(10, 10, 15, 0.15);
+    --color-shadow-xl: rgba(10, 10, 15, 0.2);
+    --color-shadow-2xl: rgba(10, 10, 15, 0.3);
+    --color-overlay: rgba(10, 10, 15, 0.5);
+    
+    /* Legacy/Backward Compatibility Mappings */
+    --color-black: var(--color-midnight-800);
+    --color-white: var(--color-offwhite-50);
+    --color-dark-text: var(--color-gray-900);
+    --color-gray-200: var(--color-offwhite-200);
+    --color-gray-400: var(--color-gray-100);
+    --color-gray-600: var(--color-gray-500);
+    --color-space-bg: var(--color-midnight-900);
+    --color-star-alpha-base: var(--color-midnight-800);
+    --color-star-alpha-glow: var(--color-amber-500);
+    --color-star-beta-base: var(--color-offwhite-200);
+    --color-star-beta-glow: var(--color-blue-500);
+    --color-accent-indigo: var(--color-blue-500);
 }
 
 * {
@@ -45,8 +65,8 @@
 body {
     font-family: 'Courier New', 'Consolas', monospace;
     overflow: hidden;
-    background: var(--color-gray-100);
-    color: var(--color-black);
+    background: var(--color-midnight-900); /* Dark space background fallback */
+    color: var(--color-gray-900);
     -webkit-font-smoothing: none;
     -moz-osx-font-smoothing: auto;
     image-rendering: pixelated;
@@ -59,6 +79,7 @@ body {
     display: block;
     width: 100vw;
     height: 100vh;
+    z-index: 1100; /* Above star controls panel (1000) */
 }
 
 /* UI Overlay */
@@ -82,19 +103,45 @@ body {
 
 /* Tutorial Panel - Pixel Style */
 #tutorial {
-    position: absolute;
+    position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: var(--color-white);
+    background: rgba(26, 31, 46, 0.95); /* Dark midnight with transparency to show starry background */
+    backdrop-filter: blur(4px);
     padding: 1.5rem;
     border-radius: 0;
-    box-shadow: 6px 6px 0 var(--color-shadow-xl);
+    box-shadow: 6px 6px 0 var(--color-shadow-xl), 0 0 20px rgba(74, 144, 226, 0.2);
     max-width: 400px;
+    max-height: 60vh;
+    overflow-y: auto;
     text-align: center;
-    animation: pixelDialogIn 0.15s steps(3);
-    border: 3px solid var(--color-black);
+    border: 2px solid var(--color-blue-500);
     image-rendering: crisp-edges;
+    z-index: 1000;
+    cursor: grab;
+}
+
+#tutorial button,
+#tutorial input,
+#tutorial select,
+#tutorial label {
+    cursor: default;
+}
+
+#tutorial:not(.hidden) {
+    animation: menuFadeIn 0.2s ease-out;
+}
+
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 .tutorial-content h2 {
@@ -102,7 +149,7 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: 0.5px;
-    color: var(--color-black);
+    color: var(--color-offwhite-200);
     font-family: 'Courier New', 'Consolas', monospace;
     text-transform: uppercase;
 }
@@ -110,7 +157,7 @@ body {
 .tutorial-content p {
     margin-bottom: 1rem;
     line-height: 1.6;
-    color: var(--color-black);
+    color: var(--color-offwhite-200);
     font-size: 0.875rem;
     font-family: 'Courier New', 'Consolas', monospace;
     font-weight: 500;
@@ -118,34 +165,41 @@ body {
 
 #controls-hint {
     font-weight: 700;
-    color: var(--color-black);
+    color: var(--color-offwhite-200);
 }
 
-#start-btn {
-    margin-top: 1.5rem;
-    padding: 0.75rem 2rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-    background: var(--color-black);
-    color: var(--color-white);
-    border: 2px solid var(--color-black);
+/* Menu Close Button (X in corner) */
+.menu-close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    color: var(--color-offwhite-200);
+    border: 2px solid transparent;
     border-radius: 0;
     cursor: pointer;
-    transition: none;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
     font-family: 'Courier New', 'Consolas', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     image-rendering: crisp-edges;
+    z-index: 1001;
+    transition: none;
 }
 
-#start-btn:hover {
-    background: var(--color-gray-500);
-    box-shadow: 2px 2px 0 var(--color-shadow-2xl);
+.menu-close-btn:hover {
+    background: var(--color-blue-500);
+    color: var(--color-midnight-900);
 }
 
-#start-btn:active {
+.menu-close-btn:active {
     transform: translate(1px, 1px);
-    box-shadow: none;
 }
 
 /* Arrow Keys Display */
@@ -166,45 +220,47 @@ body {
 .arrow-key {
     width: 48px;
     height: 48px;
-    background: var(--color-gray-300);
-    border: 3px solid var(--color-black);
+    background: rgba(26, 31, 46, 0.8);
+    border: 2px solid var(--color-blue-500);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
     font-weight: 700;
-    color: var(--color-black);
+    color: var(--color-offwhite-200);
     box-shadow: 2px 2px 0 var(--color-shadow-xl);
     image-rendering: crisp-edges;
     font-family: 'Courier New', 'Consolas', monospace;
 }
 
 .arrow-key:hover {
-    background: var(--color-gray-400);
+    background: rgba(42, 47, 62, 0.9);
+    border-color: var(--color-blue-400);
 }
 
 .tutorial-hint {
     margin-top: 0.75rem;
     font-size: 0.75rem;
-    color: var(--color-gray-600);
+    color: var(--color-gray-500);
     font-style: italic;
 }
 
 .tutorial-hint kbd {
-    background: var(--color-gray-300);
-    border: 2px solid var(--color-black);
+    background: rgba(245, 245, 240, 0.2);
+    border: 2px solid var(--color-blue-500);
     padding: 2px 6px;
     font-family: 'Courier New', 'Consolas', monospace;
     font-weight: 700;
     font-size: 0.75rem;
-    box-shadow: 1px 1px 0 var(--color-shadow-dark);
+    color: var(--color-offwhite-200);
+    box-shadow: 1px 1px 0 var(--color-shadow-md);
     margin: 0 2px;
 }
 
-/* Thought Bubble - Pixel Art Style */
+/* Thought Bubble - Pixel Art Style (Legacy, kept for compatibility) */
 #guide-comment {
     position: absolute;
-    background: var(--color-white);
+    background: var(--color-offwhite-200);
     padding: 0.75rem 1rem;
     border-radius: 4px;
     box-shadow: 4px 4px 0 var(--color-shadow-lg);
@@ -213,9 +269,9 @@ body {
     line-height: 1.4;
     animation: pixelBubbleIn 0.15s steps(3);
     z-index: 100;
-    border: 3px solid var(--color-black);
+    border: 3px solid var(--color-midnight-800);
     font-weight: 500;
-    color: var(--color-dark-text);
+    color: var(--color-gray-900);
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
     image-rendering: crisp-edges;
@@ -227,7 +283,7 @@ body {
     width: 0;
     height: 0;
     border: 6px solid transparent;
-    border-right-color: var(--color-black);
+    border-right-color: var(--color-midnight-800);
     bottom: 12px;
     left: -12px;
     top: auto;
@@ -240,25 +296,85 @@ body {
     width: 0;
     height: 0;
     border: 6px solid transparent;
-    border-right-color: var(--color-white);
+    border-right-color: var(--color-offwhite-200);
     bottom: 12px;
     left: -9px;
     top: auto;
     right: auto;
 }
 
+/* Guide Message - Stacked Messages System */
+.guide-message {
+    position: absolute;
+    background: rgba(26, 31, 46, 0.95); /* Dark midnight with slight transparency */
+    backdrop-filter: blur(4px);
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    box-shadow: 4px 4px 0 rgba(10, 10, 15, 0.4), 0 0 12px rgba(74, 144, 226, 0.2); /* Dark shadow + subtle blue glow */
+    max-width: 280px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    z-index: 1100; /* Changed from 100 to appear above star controls panel (1000) */
+    border: 2px solid var(--color-blue-500);
+    font-weight: 500;
+    color: var(--color-offwhite-200);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    pointer-events: none;
+    will-change: left, top, transform, opacity;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out, left 0.15s linear, top 0.15s linear;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.guide-message::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-right-color: var(--color-blue-500);
+    bottom: 12px;
+    left: -12px;
+    top: auto;
+    right: auto;
+}
+
+.guide-message::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-right-color: rgba(26, 31, 46, 0.95);
+    bottom: 12px;
+    left: -9px;
+    top: auto;
+    right: auto;
+}
+
+/* Message Animation States */
+.guide-message.message-entering {
+    animation: messageFadeIn 0.3s ease-out forwards;
+}
+
+.guide-message.message-exiting {
+    animation: messageFadeOut 0.3s ease-in forwards;
+}
+
 /* Message Prompt - Pixel Style */
 #message-prompt {
     position: fixed;
     /* Positioned dynamically via JS */
-    background: var(--color-white);
+    background: var(--color-offwhite-200);
     padding: 1rem 1.25rem;
     border-radius: 0;
     box-shadow: 6px 6px 0 var(--color-shadow-xl);
     width: 280px;
     animation: pixelDialogIn 0.15s steps(3);
     z-index: 2000;
-    border: 3px solid var(--color-black);
+    border: 3px solid var(--color-midnight-800);
     image-rendering: crisp-edges;
 }
 
@@ -266,7 +382,7 @@ body {
     margin-bottom: 0.75rem;
     font-size: 0.875rem;
     font-weight: 700;
-    color: var(--color-black);
+    color: var(--color-gray-900);
     font-family: 'Courier New', 'Consolas', monospace;
     letter-spacing: 0.5px;
     text-transform: uppercase;
@@ -275,7 +391,7 @@ body {
 .prompt-content input {
     width: 100%;
     padding: 0.625rem 0.75rem;
-    border: 2px solid var(--color-black);
+    border: 2px solid var(--color-midnight-800);
     border-radius: 0;
     font-size: 0.875rem;
     font-family: 'Courier New', 'Consolas', monospace;
@@ -283,11 +399,11 @@ body {
     outline: none;
     transition: none;
     margin-bottom: 0.75rem;
-    background: var(--color-gray-300);
+    background: var(--color-offwhite-300);
 }
 
 .prompt-content input:focus {
-    background: var(--color-white);
+    background: var(--color-offwhite-50);
     box-shadow: inset 2px 2px 0 var(--color-shadow-md);
 }
 
@@ -369,6 +485,38 @@ body {
     }
 }
 
+/* Message Stacking Animations */
+@keyframes messageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes messageFadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+}
+
+@keyframes messageSlideUp {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(calc(-1 * (100px + 10px)));
+    }
+}
+
 @keyframes dialogIn {
     from {
         opacity: 0;
@@ -413,6 +561,12 @@ body {
         padding: 1rem 1.25rem;
     }
 
+    .guide-message {
+        max-width: 250px;
+        font-size: 0.875rem;
+        padding: 1rem 1.25rem;
+    }
+
     #message-prompt {
         width: calc(100% - 2rem);
     }
@@ -445,7 +599,7 @@ body {
 #joystick-stick {
     width: 50%;
     height: 50%;
-    background: var(--color-black);
+    background: var(--color-midnight-800);
     border-radius: 50%;
     position: absolute;
     top: 50%;
@@ -457,7 +611,7 @@ body {
 /* Selection Styling */
 ::selection {
     background: var(--color-shadow-md);
-    color: var(--color-black);
+    color: var(--color-gray-900);
 }
 
 /* Left Side Settings Panel */
@@ -466,19 +620,179 @@ body {
     left: 1rem;
     top: 50%;
     transform: translateY(-50%);
-    background: var(--color-white);
+    background: rgba(26, 31, 46, 0.95); /* Dark midnight with transparency to match menu */
+    backdrop-filter: blur(4px);
     padding: 1rem;
-    border: 3px solid var(--color-black);
-    box-shadow: 6px 6px 0 var(--color-shadow-xl);
+    border: 2px solid var(--color-blue-500); /* Blue border to match menu */
+    box-shadow: 6px 6px 0 var(--color-shadow-xl), 0 0 20px rgba(74, 144, 226, 0.2); /* Blue glow to match menu */
     z-index: 1000;
     min-width: 200px;
     max-width: 250px;
     image-rendering: crisp-edges;
     font-family: 'Courier New', 'Consolas', monospace;
+    cursor: grab;
+}
+
+#settings-panel button,
+#settings-panel input,
+#settings-panel select,
+#settings-panel label {
+    cursor: default;
 }
 
 #settings-panel.hidden {
     display: none;
+}
+
+#settings-panel:not(.hidden) {
+    animation: settingsPanelFadeIn 0.2s ease-out;
+}
+
+@keyframes settingsPanelFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+}
+
+/* Star Controls Panel */
+#star-controls-panel {
+    position: fixed;
+    background: rgba(26, 31, 46, 0.95); /* Dark midnight with transparency to match menu */
+    border: 3px solid var(--color-midnight-600);
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-width: 560px;
+    max-width: 640px;
+    max-height: 75vh;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 4px 4px 0 var(--color-shadow-xl);
+    font-family: 'Courier New', 'Consolas', monospace;
+    cursor: grab;
+}
+
+#star-controls-panel button,
+#star-controls-panel input,
+#star-controls-panel select,
+#star-controls-panel label {
+    cursor: default;
+}
+
+/* 2-column layout for star controls panel */
+#star-controls-panel .star-controls-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-top: 1rem;
+}
+
+/* Full width sections (like star selection) */
+#star-controls-panel .star-controls-full-width {
+    grid-column: 1 / -1;
+}
+
+/* Responsive: single column on smaller screens */
+@media (max-width: 700px) {
+    #star-controls-panel {
+        min-width: 280px;
+        max-width: 320px;
+    }
+    
+    #star-controls-panel .star-controls-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    #star-controls-panel .star-controls-full-width {
+        grid-column: 1;
+    }
+}
+
+#star-controls-panel.hidden {
+    display: none;
+}
+
+#star-controls-panel:not(.hidden) {
+    animation: settingsPanelFadeIn 0.2s ease-out;
+}
+
+/* Custom Scrollbar for Star Controls Panel */
+#star-controls-panel::-webkit-scrollbar {
+    width: 12px;
+}
+
+#star-controls-panel::-webkit-scrollbar-track {
+    background: var(--color-midnight-800);
+    border-radius: 6px;
+}
+
+#star-controls-panel::-webkit-scrollbar-thumb {
+    background: var(--color-midnight-600);
+    border-radius: 6px;
+    border: 2px solid var(--color-midnight-800);
+}
+
+#star-controls-panel::-webkit-scrollbar-thumb:hover {
+    background: var(--color-blue-500);
+}
+
+/* Firefox scrollbar */
+#star-controls-panel {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-midnight-600) var(--color-midnight-800);
+}
+
+input[type="color"] {
+    width: 100%;
+    height: 40px;
+    border: 2px solid var(--color-midnight-600);
+    border-radius: 4px;
+    cursor: pointer;
+    background: var(--color-midnight-700);
+    padding: 2px;
+}
+
+input[type="color"]:hover {
+    border-color: var(--color-blue-500);
+}
+
+input[type="color"]:focus {
+    outline: none;
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--color-offwhite-200);
+    margin-top: 0.25rem;
+}
+
+#star-selector {
+    width: 100%;
+    padding: 0.5rem;
+    background: var(--color-midnight-700);
+    color: var(--color-offwhite-200);
+    border: 2px solid var(--color-midnight-600);
+    font-family: 'Courier New', 'Consolas', monospace;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#star-selector:hover {
+    border-color: var(--color-blue-500);
+}
+
+#star-selector:focus {
+    outline: none;
+    border-color: var(--color-blue-500);
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
 }
 
 .settings-header {
@@ -487,9 +801,24 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 1rem;
-    color: var(--color-black);
-    border-bottom: 2px solid var(--color-black);
+    color: var(--color-offwhite-200); /* Light text to match menu */
+    border-bottom: 2px solid var(--color-blue-500); /* Blue border to match menu */
     padding-bottom: 0.5rem;
+    cursor: grab;
+    user-select: none;
+}
+
+.settings-header:active {
+    cursor: grabbing;
+}
+
+.tutorial-content h2 {
+    cursor: grab;
+    user-select: none;
+}
+
+.tutorial-content h2:active {
+    cursor: grabbing;
 }
 
 .settings-section {
@@ -502,7 +831,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 0.5rem;
-    color: var(--color-black);
+    color: var(--color-offwhite-200); /* Light text to match menu */
 }
 
 .background-library {
@@ -513,8 +842,8 @@ body {
 
 .background-item {
     padding: 0.5rem;
-    border: 2px solid var(--color-black);
-    background: var(--color-gray-300);
+    border: 2px solid var(--color-blue-500); /* Blue border to match menu */
+    background: rgba(42, 47, 62, 0.6); /* Dark background */
     cursor: pointer;
     transition: none;
     font-family: 'Courier New', 'Consolas', monospace;
@@ -526,8 +855,8 @@ body {
 .background-preview {
     width: 100%;
     height: 64px;
-    border: 2px solid var(--color-black);
-    background: var(--color-white);
+    border: 2px solid var(--color-blue-500); /* Blue border */
+    background: var(--color-midnight-900);
     overflow: hidden;
     image-rendering: pixelated;
     image-rendering: -moz-crisp-edges;
@@ -539,16 +868,17 @@ body {
     font-size: 0.75rem;
     font-weight: 500;
     text-align: center;
-    color: #000;
+    color: var(--color-offwhite-200); /* Light text to match menu */
 }
 
 .background-item:hover {
-    background: #e0e0e0;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+    background: rgba(58, 63, 78, 0.8);
+    box-shadow: 2px 2px 0 var(--color-shadow-xl);
+    border-color: var(--color-blue-400);
 }
 
 .background-item:hover .background-preview {
-    border-color: #333;
+    border-color: var(--color-blue-400);
 }
 
 .background-item:active {
@@ -557,15 +887,16 @@ body {
 }
 
 .background-item.active {
-    background: #000;
+    background: var(--color-blue-500); /* Blue background when active */
+    border-color: var(--color-blue-400);
 }
 
 .background-item.active .background-label {
-    color: white;
+    color: var(--color-midnight-900); /* Dark text on blue background */
 }
 
 .background-item.active .background-preview {
-    border-color: #fff;
+    border-color: var(--color-offwhite-200);
 }
 
 .settings-option {
@@ -577,7 +908,7 @@ body {
     font-size: 0.75rem;
     font-weight: 500;
     margin-bottom: 0.25rem;
-    color: var(--color-black);
+    color: var(--color-offwhite-200); /* Light text to match menu */
 }
 
 .settings-option input[type="range"] {
@@ -585,8 +916,8 @@ body {
     -webkit-appearance: none;
     appearance: none;
     height: 4px;
-    background: var(--color-gray-400);
-    border: 2px solid var(--color-black);
+    background: rgba(42, 47, 62, 0.6); /* Dark background */
+    border: 2px solid var(--color-blue-500); /* Blue border */
     outline: none;
 }
 
@@ -595,17 +926,27 @@ body {
     appearance: none;
     width: 16px;
     height: 16px;
-    background: var(--color-black);
+    background: var(--color-blue-500); /* Blue thumb */
     cursor: pointer;
-    border: 2px solid var(--color-black);
+    border: 2px solid var(--color-blue-500);
 }
 
 .settings-option input[type="range"]::-moz-range-thumb {
     width: 16px;
     height: 16px;
-    background: var(--color-black);
+    background: var(--color-blue-500); /* Blue thumb */
     cursor: pointer;
-    border: 2px solid var(--color-black);
+    border: 2px solid var(--color-blue-500);
+}
+
+.slider-value {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--color-offwhite-200);
+    font-family: 'Courier New', 'Consolas', monospace;
+    min-width: 3ch;
+    text-align: right;
 }
 
 .settings-toggle {
@@ -618,7 +959,7 @@ body {
     width: 20px;
     height: 20px;
     cursor: pointer;
-    accent-color: var(--color-black);
+    accent-color: var(--color-blue-500); /* Blue accent to match menu */
 }
 
 #settings-toggle-btn {
@@ -626,9 +967,9 @@ body {
     left: 1rem;
     top: 1rem;
     padding: 0.5rem 0.75rem;
-    background: var(--color-black);
-    color: var(--color-white);
-    border: 2px solid var(--color-black);
+    background: var(--color-midnight-800);
+    color: var(--color-offwhite-50);
+    border: 2px solid var(--color-midnight-800);
     border-radius: 0;
     cursor: pointer;
     font-size: 0.75rem;
@@ -641,11 +982,90 @@ body {
 }
 
 #settings-toggle-btn:hover {
-    background: var(--color-gray-500);
+    background: var(--color-midnight-700);
     box-shadow: 2px 2px 0 var(--color-shadow-2xl);
 }
 
 #settings-toggle-btn:active {
     transform: translate(1px, 1px);
     box-shadow: none;
+}
+
+#menu-toggle-btn {
+    position: fixed;
+    left: 1rem;
+    top: 3.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-midnight-800);
+    color: var(--color-offwhite-50);
+    border: 2px solid var(--color-midnight-800);
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    z-index: 1001;
+    image-rendering: crisp-edges;
+}
+
+#menu-toggle-btn:hover {
+    background: var(--color-midnight-700);
+    box-shadow: 2px 2px 0 var(--color-shadow-2xl);
+}
+
+#menu-toggle-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+}
+
+#star-controls-toggle-btn {
+    position: fixed;
+    left: 1rem;
+    top: 6rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-midnight-800);
+    color: var(--color-offwhite-50);
+    border: 2px solid var(--color-midnight-800);
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    z-index: 1001;
+    image-rendering: crisp-edges;
+    box-shadow: 2px 2px 0 var(--color-shadow-xl);
+    transition: all 0.1s ease;
+}
+
+#star-controls-toggle-btn:hover {
+    background: var(--color-midnight-700);
+    box-shadow: 2px 2px 0 var(--color-shadow-2xl);
+}
+
+#star-controls-toggle-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+}
+
+/* Logo - Rusty Orange Style */
+#logo {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.logo-text {
+    font-family: 'Orbitron', 'Arial Black', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #b87333; /* Rusty orange base */
+    display: inline-block;
 }

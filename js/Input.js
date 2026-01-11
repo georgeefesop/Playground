@@ -149,7 +149,7 @@ export class Input {
         window.addEventListener('touchmove', handleMove, { passive: false });
         window.addEventListener('mousemove', handleMove);
 
-        window.addEventListener('touchend', handleEnd);
+        window.addEventListener('touchend', handleEnd, { passive: true });
         window.addEventListener('mouseup', handleEnd);
     }
 

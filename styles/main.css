@@ -97,6 +97,11 @@ body {
     pointer-events: auto;
 }
 
+/* Top Button Group - Desktop: buttons positioned individually */
+.top-button-group {
+    display: contents; /* Don't create a container on desktop */
+}
+
 /* Utility */
 .hidden {
     display: none !important;
@@ -691,30 +696,38 @@ body {
         background: rgba(200, 200, 200, 0.9); /* Light gray background for visibility */
     }
 
-    /* Top buttons horizontally across top on mobile */
-    #settings-toggle-btn,
-    #star-controls-toggle-btn,
-    #activate-all-stars-ui-btn {
+    /* Top Button Group - Mobile: use flexbox container to prevent overlap */
+    .top-button-group {
         position: fixed !important;
         top: 0.5rem !important;
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        gap: 0.25rem !important;
+        z-index: 1001;
+        pointer-events: auto;
+    }
+    
+    /* Top buttons in mobile group - remove individual positioning */
+    #settings-toggle-btn,
+    #star-controls-toggle-btn,
+    #activate-all-stars-ui-btn,
+    #randomize-stars-ui-btn {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
         right: auto !important;
         bottom: auto !important;
-        display: inline-flex;
+        display: inline-flex !important;
         width: auto;
         min-width: auto;
         max-width: none;
-    }
-    
-    #settings-toggle-btn {
-        left: 0.5rem !important;
-    }
-    
-    #star-controls-toggle-btn {
-        left: calc(0.5rem + 50px + 0.5rem) !important; /* After settings button (adjusted width) */
-    }
-    
-    #activate-all-stars-ui-btn {
-        left: calc(0.5rem + 50px + 0.5rem + 50px + 0.5rem) !important; /* After star controls button */
+        font-size: 0.65rem !important; /* Slightly smaller font for mobile */
+        padding: 0.4rem 0.5rem !important; /* Tighter padding */
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     /* Move zoom slider above logo on left side on mobile */

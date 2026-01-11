@@ -19,33 +19,36 @@
 
     <!-- UI Overlay -->
     <div id="ui-overlay">
-        <!-- Settings Toggle Button -->
-        <button id="settings-toggle-btn">⚙</button>
-        
-        <!-- Star Controls Toggle Button -->
-        <button id="star-controls-toggle-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
-                <path d="M12 2L15.09 8.26L22 10L15.09 11.74L12 18L8.91 11.74L2 10L8.91 8.26L12 2Z" fill="currentColor"/>
-                <circle cx="12" cy="12" r="2" fill="var(--color-midnight-800)"/>
-            </svg>
-            <span>Star Controls</span>
-        </button>
-        
-        <!-- Activate All Stars Button (UI Overlay) -->
-        <button id="activate-all-stars-ui-btn">⭐ Activate All Stars</button>
-        
-        <!-- Randomize Stars Button (UI Overlay) -->
-        <button id="randomize-stars-ui-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
-                <path d="M6 2L3 6L6 10H18L21 6L18 2H6Z" fill="currentColor"/>
-                <path d="M6 14L3 18L6 22H18L21 18L18 14H6Z" fill="currentColor"/>
-                <circle cx="12" cy="6" r="1.5" fill="var(--color-midnight-800)"/>
-                <circle cx="12" cy="18" r="1.5" fill="var(--color-midnight-800)"/>
-                <path d="M9 12L15 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M12 9L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <span>Randomize Stars</span>
-        </button>
+        <!-- Top Button Group (Mobile) -->
+        <div id="top-button-group" class="top-button-group">
+            <!-- Settings Toggle Button -->
+            <button id="settings-toggle-btn">⚙</button>
+            
+            <!-- Star Controls Toggle Button -->
+            <button id="star-controls-toggle-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
+                    <path d="M12 2L15.09 8.26L22 10L15.09 11.74L12 18L8.91 11.74L2 10L8.91 8.26L12 2Z" fill="currentColor"/>
+                    <circle cx="12" cy="12" r="2" fill="var(--color-midnight-800)"/>
+                </svg>
+                <span>Star Controls</span>
+            </button>
+            
+            <!-- Activate All Stars Button (UI Overlay) -->
+            <button id="activate-all-stars-ui-btn">⭐ Activate All Stars</button>
+            
+            <!-- Randomize Stars Button (UI Overlay) -->
+            <button id="randomize-stars-ui-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
+                    <path d="M6 2L3 6L6 10H18L21 6L18 2H6Z" fill="currentColor"/>
+                    <path d="M6 14L3 18L6 22H18L21 18L18 14H6Z" fill="currentColor"/>
+                    <circle cx="12" cy="6" r="1.5" fill="var(--color-midnight-800)"/>
+                    <circle cx="12" cy="18" r="1.5" fill="var(--color-midnight-800)"/>
+                    <path d="M9 12L15 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M12 9L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Randomize Stars</span>
+            </button>
+        </div>
         
         <!-- Settings Panel -->
         <div id="settings-panel" class="hidden">

@@ -12,6 +12,90 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css?v=1768161597">
+    <script>
+        // Override document.write() and contentDocument.write() to prevent freezing from third-party scripts
+        (function() {
+            let pageLoaded = false;
+            window.addEventListener('DOMContentLoaded', () => {
+                pageLoaded = true;
+            });
+            
+            // Override Document.prototype.write to catch all document writes (including iframe contentDocuments)
+            const originalWrite = Document.prototype.write;
+            const originalWriteln = Document.prototype.writeln;
+            
+            Document.prototype.write = function(...args) {
+                if (pageLoaded) {
+                    console.warn('document.write() called after page load - blocked to prevent freezing');
+                    return;
+                }
+                return originalWrite.apply(this, args);
+            };
+            
+            Document.prototype.writeln = function(...args) {
+                if (pageLoaded) {
+                    console.warn('document.writeln() called after page load - blocked to prevent freezing');
+                    return;
+                }
+                return originalWriteln.apply(this, args);
+            };
+            
+            // Function to override iframe contentDocument.write
+            function overrideIframeWrite(iframe) {
+                try {
+                    if (iframe.contentDocument && iframe.contentDocument.write) {
+                        iframe.contentDocument.write = function(...args) {
+                            console.warn('iframe contentDocument.write() blocked to prevent freezing');
+                            return;
+                        };
+                        iframe.contentDocument.writeln = function(...args) {
+                            console.warn('iframe contentDocument.writeln() blocked to prevent freezing');
+                            return;
+                        };
+                    }
+                } catch (e) {
+                    // Cross-origin iframe, can't access
+                }
+            }
+            
+            // Use MutationObserver to catch iframes as they're added
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            if (node.tagName === 'IFRAME') {
+                                // Try immediately
+                                overrideIframeWrite(node);
+                                // Also try after a short delay in case contentDocument isn't ready
+                                setTimeout(() => overrideIframeWrite(node), 0);
+                                // And on load
+                                node.addEventListener('load', () => overrideIframeWrite(node), { once: true });
+                            }
+                            // Check for iframes inside the added node
+                            const iframes = node.querySelectorAll && node.querySelectorAll('iframe');
+                            if (iframes) {
+                                iframes.forEach(iframe => {
+                                    overrideIframeWrite(iframe);
+                                    setTimeout(() => overrideIframeWrite(iframe), 0);
+                                    iframe.addEventListener('load', () => overrideIframeWrite(iframe), { once: true });
+                                });
+                            }
+                        }
+                    });
+                });
+            });
+            
+            // Start observing
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
+            
+            // Also override on the main document for compatibility
+            document.write = Document.prototype.write.bind(document);
+            document.writeln = Document.prototype.writeln.bind(document);
+        })();
+    </script>
 </head>
 <body>
     <!-- Canvas for the world -->
@@ -19,37 +103,31 @@
 
     <!-- UI Overlay -->
     <div id="ui-overlay">
-        <!-- Top Button Group (Mobile) -->
-        <div id="top-button-group" class="top-button-group">
-            <!-- Settings Toggle Button -->
-            <button id="settings-toggle-btn">⚙</button>
-            
-            <!-- Star Controls Toggle Button -->
-            <button id="star-controls-toggle-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
-                    <path d="M12 2L15.09 8.26L22 10L15.09 11.74L12 18L8.91 11.74L2 10L8.91 8.26L12 2Z" fill="currentColor"/>
-                    <circle cx="12" cy="12" r="2" fill="var(--color-midnight-800)"/>
-                </svg>
-                <span>Star Controls</span>
-            </button>
-            
-            <!-- Activate All Stars Button (UI Overlay) -->
-            <button id="activate-all-stars-ui-btn">⭐ Activate All Stars</button>
-            
-            <!-- Randomize Stars Button (UI Overlay) -->
-            <button id="randomize-stars-ui-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
-                    <path d="M6 2L3 6L6 10H18L21 6L18 2H6Z" fill="currentColor"/>
-                    <path d="M6 14L3 18L6 22H18L21 18L18 14H6Z" fill="currentColor"/>
-                    <circle cx="12" cy="6" r="1.5" fill="var(--color-midnight-800)"/>
-                    <circle cx="12" cy="18" r="1.5" fill="var(--color-midnight-800)"/>
-                    <path d="M9 12L15 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <path d="M12 9L12 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                <span>Randomize Stars</span>
-            </button>
-        </div>
+        <!-- Visibility Toggle Button -->
+        <button id="visibility-toggle-btn" title="Toggle UI Visibility">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" fill="currentColor"/>
+            </svg>
+        </button>
         
+        <!-- Settings Toggle Button -->
+        <button id="settings-toggle-btn">⚙</button>
+        
+        <!-- Star Controls Toggle Button -->
+        <button id="star-controls-toggle-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 0.25rem;">
+                <path d="M12 2L15.09 8.26L22 10L15.09 11.74L12 18L8.91 11.74L2 10L8.91 8.26L12 2Z" fill="currentColor"/>
+                <circle cx="12" cy="12" r="2" fill="var(--color-midnight-800)"/>
+            </svg>
+            <span>Controls</span>
+        </button>
+        
+        <!-- Activate All Stars Button (UI Overlay) -->
+        <button id="activate-all-stars-ui-btn">⭐ Activate All</button>
+
+        <!-- Randomize Stars Button (UI Overlay) -->
+        <button id="randomize-stars-ui-btn">🎲 Randomize</button>
+
         <!-- Settings Panel -->
         <div id="settings-panel" class="hidden">
             <div class="menu-title-bar">
@@ -57,7 +135,6 @@
                 <button id="settings-close-btn" class="menu-close-btn">×</button>
             </div>
             
-            <div class="settings-content">
             <div class="settings-section">
                 <div class="settings-section-title">Background</div>
                 <div class="background-library" id="background-library">
@@ -127,23 +204,6 @@
                     </p>
                 </div>
             </div>
-            </div>
-            <!-- Corner resize handle (bottom-right) -->
-            <div class="resize-handle resize-handle-corner">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Grip dots pattern (3x3 grid in bottom-right corner) -->
-                    <circle cx="12" cy="4" r="1" fill="currentColor"/>
-                    <circle cx="12" cy="8" r="1" fill="currentColor"/>
-                    <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                    <circle cx="8" cy="12" r="1" fill="currentColor"/>
-                    <circle cx="4" cy="12" r="1" fill="currentColor"/>
-                </svg>
-            </div>
-            <!-- Edge resize handles -->
-            <div class="resize-handle resize-handle-top"></div>
-            <div class="resize-handle resize-handle-right"></div>
-            <div class="resize-handle resize-handle-bottom"></div>
-            <div class="resize-handle resize-handle-left"></div>
         </div>
 
         <!-- Star Controls Panel -->
@@ -209,10 +269,10 @@
                         <div class="slider-range-info">
                             <span class="slider-min">20</span>
                             <span class="slider-current" id="spoke-count-value">125</span>
-                            <span class="slider-max">200</span>
+                            <span class="slider-max">150</span>
                         </div>
                         <div class="slider-track">
-                            <input type="range" id="spoke-count-slider" min="20" max="200" step="5" value="125">
+                            <input type="range" id="spoke-count-slider" min="20" max="150" step="5" value="125">
                         </div>
                     </div>
                     <div class="settings-option">
@@ -263,19 +323,19 @@
                             <div class="gradient-preview" id="layer1-gradient-preview"></div>
                             <div class="gradient-color-selectors">
                                 <div class="gradient-color-selector">
-                                    <label class="gradient-color-label">Base</label>
+                                    <label class="gradient-color-label" for="layer1-base-color-picker">Base</label>
                                     <input type="color" id="layer1-base-color-picker" value="#FF8C00" class="gradient-color-input" title="Base Color">
                                     <div class="gradient-opacity-control">
-                                        <label class="gradient-opacity-label">Opacity</label>
+                                        <label class="gradient-opacity-label" for="layer1-base-opacity-slider">Opacity</label>
                                         <input type="range" id="layer1-base-opacity-slider" min="0" max="100" step="1" value="100" class="gradient-opacity-slider">
                                         <span class="gradient-opacity-value" id="layer1-base-opacity-value">100%</span>
                                     </div>
                                 </div>
                                 <div class="gradient-color-selector">
-                                    <label class="gradient-color-label">Tip</label>
+                                    <label class="gradient-color-label" for="layer1-tip-color-picker">Tip</label>
                                     <input type="color" id="layer1-tip-color-picker" value="#FF0000" class="gradient-color-input" title="Tip Color">
                                     <div class="gradient-opacity-control">
-                                        <label class="gradient-opacity-label">Opacity</label>
+                                        <label class="gradient-opacity-label" for="layer1-tip-opacity-slider">Opacity</label>
                                         <input type="range" id="layer1-tip-opacity-slider" min="0" max="100" step="1" value="100" class="gradient-opacity-slider">
                                         <span class="gradient-opacity-value" id="layer1-tip-opacity-value">100%</span>
                                     </div>
@@ -316,19 +376,19 @@
                             <div class="gradient-preview" id="layer2-gradient-preview"></div>
                             <div class="gradient-color-selectors">
                                 <div class="gradient-color-selector">
-                                    <label class="gradient-color-label">Base</label>
+                                    <label class="gradient-color-label" for="layer2-base-color-picker">Base</label>
                                     <input type="color" id="layer2-base-color-picker" value="#FFFF00" class="gradient-color-input" title="Base Color">
                                     <div class="gradient-opacity-control">
-                                        <label class="gradient-opacity-label">Opacity</label>
+                                        <label class="gradient-opacity-label" for="layer2-base-opacity-slider">Opacity</label>
                                         <input type="range" id="layer2-base-opacity-slider" min="0" max="100" step="1" value="100" class="gradient-opacity-slider">
                                         <span class="gradient-opacity-value" id="layer2-base-opacity-value">100%</span>
                                     </div>
                                 </div>
                                 <div class="gradient-color-selector">
-                                    <label class="gradient-color-label">Tip</label>
+                                    <label class="gradient-color-label" for="layer2-tip-color-picker">Tip</label>
                                     <input type="color" id="layer2-tip-color-picker" value="#800080" class="gradient-color-input" title="Tip Color">
                                     <div class="gradient-opacity-control">
-                                        <label class="gradient-opacity-label">Opacity</label>
+                                        <label class="gradient-opacity-label" for="layer2-tip-opacity-slider">Opacity</label>
                                         <input type="range" id="layer2-tip-opacity-slider" min="0" max="100" step="1" value="100" class="gradient-opacity-slider">
                                         <span class="gradient-opacity-value" id="layer2-tip-opacity-value">100%</span>
                                     </div>

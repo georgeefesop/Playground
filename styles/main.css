@@ -78,9 +78,16 @@ body {
 /* Canvas */
 #world-canvas {
     display: block;
-    width: 100vw;
-    height: 100vh;
-    z-index: 1100; /* Above star controls panel (1000) */
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* Don't set width/height in CSS - let JavaScript set it via inline styles to avoid conflicts */
+    z-index: 1; /* Below UI overlay */
+    /* Remove any transforms that might affect positioning */
+    transform: none;
+    /* Ensure canvas is visible */
+    visibility: visible;
+    opacity: 1;
 }
 
 /* UI Overlay */
@@ -91,15 +98,11 @@ body {
     width: 100%;
     height: 100%;
     pointer-events: none;
+    z-index: 1000; /* Above canvas */
 }
 
 #ui-overlay > * {
     pointer-events: auto;
-}
-
-/* Top Button Group - Desktop: buttons positioned individually */
-.top-button-group {
-    display: contents; /* Don't create a container on desktop */
 }
 
 /* Utility */
@@ -696,21 +699,28 @@ body {
         background: rgba(200, 200, 200, 0.9); /* Light gray background for visibility */
     }
 
-    /* Top Button Group - Mobile: use flexbox container to prevent overlap */
-    .top-button-group {
-        position: fixed !important;
-        top: 0.5rem !important;
-        left: 0.5rem !important;
-        right: 0.5rem !important;
+    /* Top buttons row on mobile - flexbox container that wraps */
+    #ui-overlay {
         display: flex !important;
-        flex-direction: row !important;
         flex-wrap: wrap !important;
-        gap: 0.25rem !important;
-        z-index: 1001;
-        pointer-events: auto;
+        align-content: flex-start !important;
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        pointer-events: none !important;
+        z-index: 1000 !important;
+        padding: 0.5rem !important;
+        gap: 0.5rem !important;
     }
     
-    /* Top buttons in mobile group - remove individual positioning */
+    #ui-overlay > * {
+        pointer-events: auto !important;
+    }
+    
+    /* Buttons flow in flex row and wrap when needed */
+    #visibility-toggle-btn,
     #settings-toggle-btn,
     #star-controls-toggle-btn,
     #activate-all-stars-ui-btn,
@@ -720,14 +730,56 @@ body {
         left: auto !important;
         right: auto !important;
         bottom: auto !important;
-        display: inline-flex !important;
-        width: auto;
-        min-width: auto;
-        max-width: none;
-        font-size: 0.65rem !important; /* Slightly smaller font for mobile */
-        padding: 0.4rem 0.5rem !important; /* Tighter padding */
+        padding: 0.5rem 0.6rem !important;
+        font-size: 0.7rem !important;
         white-space: nowrap;
+        line-height: 1.3;
+        height: 2.2rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        box-sizing: border-box;
         flex-shrink: 0;
+        margin: 0 !important;
+    }
+    
+    /* Ensure panels maintain their fixed positioning */
+    #settings-panel,
+    #star-controls-panel {
+        position: fixed !important;
+        flex: none !important;
+        align-self: auto !important;
+    }
+    
+    /* UI hidden class for opacity toggle */
+    .ui-hidden {
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+    
+    /* Ensure Star Controls button shows text */
+    #star-controls-toggle-btn span {
+        display: inline !important;
+    }
+    
+    /* Only abbreviate on very small screens (< 360px) */
+    @media (max-width: 360px) {
+        #randomize-stars-ui-btn {
+            font-size: 0 !important;
+        }
+        #randomize-stars-ui-btn::before {
+            content: "🎲 RAND";
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+        
+        #activate-all-stars-ui-btn {
+            font-size: 0 !important;
+        }
+        #activate-all-stars-ui-btn::before {
+            content: "⭐ ALL";
+            font-size: 0.7rem;
+            display: inline-block;
+        }
     }
 
     /* Move zoom slider above logo on left side on mobile */
@@ -799,25 +851,23 @@ body {
     transform: translateY(-50%);
     background: var(--color-midnight-800); /* Solid dark midnight background */
     padding: 0;
-    border: 3px solid var(--color-midnight-600);
-    border-radius: 8px;
-    box-shadow: 4px 4px 0 var(--color-shadow-xl);
+    border: 2px solid var(--color-blue-500); /* Blue border to match menu */
+    box-shadow: 6px 6px 0 var(--color-shadow-xl), 0 0 20px rgba(74, 144, 226, 0.2); /* Blue glow to match menu */
     z-index: 1002; /* Above toggle buttons (1001) */
     min-width: 200px;
-    max-width: 400px;
-    height: 70vh;
-    max-height: 70vh;
+    max-width: 250px;
+    max-height: 75vh;
     image-rendering: crisp-edges;
     font-family: 'Courier New', 'Consolas', monospace;
     cursor: grab;
-    user-select: none;
-    resize: none; /* Prevent default browser resize */
-    display: flex;
-    flex-direction: column;
-    overflow: visible; /* Allow title bar and resize handle to extend beyond */
+    border-radius: 0;
+    position: relative; /* Needed for absolute positioning of title bar */
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 #settings-panel .menu-title-bar {
@@ -828,33 +878,27 @@ body {
     width: calc(100% + 6px); /* Full width including borders */
     height: 2.5rem; /* Fixed height */
     margin: 0;
-    border-top-left-radius: 8px; /* Match panel border-radius */
-    border-top-right-radius: 8px;
-    overflow: hidden; /* Ensure border-radius is respected */
-    z-index: 1001; /* Above content but scrollbar should be visible */
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    z-index: 1001; /* Above content */
     box-sizing: border-box;
-    pointer-events: auto; /* Allow interaction with title bar */
+    pointer-events: auto;
 }
 
-/* Scrollable content area for settings panel */
-#settings-panel > .settings-content {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding: 1.5rem;
-    padding-right: calc(1.5rem + 12px);
-    margin-top: calc(2.5rem - 3px); /* Start below title bar (2.5rem height - 3px border) */
-    margin-bottom: 24px; /* Space for resize handle section (24px height) */
-    min-height: 0; /* Allow flex shrinking */
-    position: relative; /* Create stacking context for scrollbar */
-    z-index: 10; /* Above panel background, below title bar and resize handle */
-    user-select: auto !important; /* Allow text selection and scrollbar dragging */
-    -webkit-user-select: auto !important;
+/* Settings panel scrollable content area */
+#settings-panel > .settings-section:first-of-type {
+    margin-top: calc(2.5rem + 0.5rem); /* Title bar height + small gap */
 }
 
-/* Settings panel content should start below title bar */
-#settings-panel > .settings-content > .settings-section:first-of-type {
-    margin-top: 0; /* No extra margin needed, padding handles spacing */
+/* Settings sections padding */
+#settings-panel > .settings-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+#settings-panel > .settings-section:last-of-type {
+    padding-bottom: 1rem;
+    margin-bottom: 0;
 }
 
 #star-controls-panel .menu-title-bar {
@@ -886,224 +930,6 @@ body {
 
 #settings-panel:not(.hidden) {
     animation: settingsPanelFadeIn 0.2s ease-out;
-}
-
-/* Resize Handle Section for Settings Panel */
-#settings-panel .resize-handle {
-    position: absolute;
-    z-index: 1002; /* Above scrollbar and content */
-    background: transparent; /* Transparent background */
-    box-sizing: border-box;
-}
-
-/* Corner resize handle (bottom-right) */
-#settings-panel .resize-handle-corner {
-    bottom: -3px; /* Extend below to cover border */
-    right: -3px; /* Extend right to cover border */
-    width: 24px;
-    height: 24px;
-    cursor: nwse-resize;
-    border-bottom-right-radius: 8px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: flex-end;
-    padding: 4px;
-}
-
-/* Top edge resize handle */
-#settings-panel .resize-handle-top {
-    top: -3px;
-    left: 0;
-    right: 24px; /* Leave space for corner handle */
-    height: 8px;
-    cursor: ns-resize;
-}
-
-/* Right edge resize handle */
-#settings-panel .resize-handle-right {
-    top: 0;
-    right: -3px;
-    bottom: 24px; /* Leave space for corner handle */
-    width: 8px;
-    cursor: ew-resize;
-}
-
-/* Bottom edge resize handle */
-#settings-panel .resize-handle-bottom {
-    bottom: -3px;
-    left: 0;
-    right: 24px; /* Leave space for corner handle */
-    height: 8px;
-    cursor: ns-resize;
-}
-
-/* Left edge resize handle */
-#settings-panel .resize-handle-left {
-    top: 0;
-    left: -3px;
-    bottom: 0;
-    width: 8px;
-    cursor: ew-resize;
-}
-
-/* Resize icon SVG styling (corner handle only) */
-#settings-panel .resize-handle-corner svg {
-    width: 16px;
-    height: 16px;
-    color: var(--color-midnight-600);
-    opacity: 0.6;
-    display: block;
-    flex-shrink: 0;
-}
-
-#settings-panel .resize-handle-corner:hover svg {
-    color: var(--color-blue-500);
-    opacity: 1;
-}
-
-#settings-panel .resize-handle-corner:active svg {
-    color: var(--color-blue-400);
-    opacity: 1;
-}
-
-/* Edge handle hover effects */
-#settings-panel .resize-handle-top:hover,
-#settings-panel .resize-handle-right:hover,
-#settings-panel .resize-handle-bottom:hover,
-#settings-panel .resize-handle-left:hover {
-    background: rgba(74, 144, 226, 0.1);
-}
-
-/* Sticky panel states for settings */
-#settings-panel.sticky-left {
-    position: fixed !important;
-    left: 0 !important;
-    right: auto !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    transform: none !important;
-    min-width: 200px;
-    max-width: 600px;
-}
-
-/* Move scrollbar to left when sticky-left */
-#settings-panel.sticky-left > .settings-content {
-    direction: rtl; /* Flips scrollbar to left side */
-    padding-left: calc(1.5rem + 12px); /* Account for scrollbar on left */
-    padding-right: 1.5rem; /* Normal padding on right */
-}
-
-/* Reset text direction for content when sticky-left */
-#settings-panel.sticky-left .settings-content {
-    direction: ltr; /* Keep text normal direction */
-}
-
-#settings-panel.sticky-right {
-    position: fixed !important;
-    right: 0 !important;
-    left: auto !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-    transform: none !important;
-    min-width: 200px;
-    max-width: 600px;
-}
-
-/* Custom Scrollbar for Settings Panel */
-#settings-panel > .settings-content::-webkit-scrollbar {
-    width: 18px;
-    position: relative;
-    z-index: 100; /* Ensure scrollbar is visible above content */
-    pointer-events: auto;
-}
-
-#settings-panel > .settings-content::-webkit-scrollbar-track {
-    background: var(--color-midnight-800);
-    border-radius: 9px;
-    margin: 0;
-    margin-top: 4px;
-    margin-bottom: calc(24px + 4px);
-    margin-right: 4px;
-    pointer-events: auto;
-}
-
-/* Adjust scrollbar track margin for sticky-left */
-#settings-panel.sticky-left > .settings-content::-webkit-scrollbar-track {
-    margin-right: 0;
-    margin-left: 4px;
-}
-
-#settings-panel > .settings-content::-webkit-scrollbar-thumb {
-    background: 
-        linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%),
-        linear-gradient(90deg, var(--color-midnight-600) 0%, rgba(58, 63, 78, 0.8) 50%, var(--color-midnight-600) 100%);
-    border-radius: 9px;
-    border: 2px solid var(--color-midnight-800);
-    min-height: 50px;
-    position: relative;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
-    pointer-events: auto;
-    cursor: grab;
-}
-
-#settings-panel > .settings-content::-webkit-scrollbar-thumb:active {
-    cursor: grabbing;
-}
-
-#settings-panel > .settings-content::-webkit-scrollbar-thumb:hover {
-    background: 
-        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%, rgba(0, 0, 0, 0.15) 100%),
-        linear-gradient(90deg, var(--color-blue-500) 0%, rgba(74, 144, 226, 0.7) 50%, var(--color-blue-500) 100%);
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
-}
-
-/* Firefox scrollbar */
-#settings-panel > .settings-content {
-    scrollbar-width: auto;
-    scrollbar-color: var(--color-midnight-600) var(--color-midnight-800);
-}
-
-/* Mobile: settings panel centered */
-@media (max-width: 768px) {
-    #settings-panel {
-        position: fixed;
-        left: 50% !important;
-        right: auto !important;
-        top: 50% !important;
-        bottom: auto !important;
-        transform: translate(-50%, -50%) !important;
-        width: calc(100vw - 2rem);
-        max-width: calc(100vw - 2rem);
-        min-width: unset;
-        height: 70vh;
-        max-height: 70vh;
-        border-radius: 8px;
-        margin: 0;
-    }
-    
-    #settings-panel.sticky-left,
-    #settings-panel.sticky-right {
-        /* Override sticky on mobile */
-        position: fixed !important;
-        left: 50% !important;
-        right: auto !important;
-        top: 50% !important;
-        bottom: auto !important;
-        transform: translate(-50%, -50%) !important;
-        height: 70vh !important;
-        max-height: 70vh !important;
-        width: calc(100vw - 2rem) !important;
-        max-width: calc(100vw - 2rem) !important;
-        border-radius: 8px !important;
-    }
 }
 
 @keyframes settingsPanelFadeIn {
@@ -1438,10 +1264,100 @@ body {
         margin: 0;
     }
     
+    /* Content area - remove resize handle margin on mobile */
+    #star-controls-panel > .star-controls-grid {
+        margin-top: calc(2.5rem - 3px) !important; /* Start below title bar */
+        margin-bottom: 0 !important; /* No resize handle on mobile */
+        padding: 0.75rem !important; /* Reduced from 1.5rem */
+        padding-right: 0.75rem !important; /* No scrollbar padding needed on mobile */
+    }
+    
+    /* Slightly more compact title bar on mobile */
+    #star-controls-panel .menu-title-bar {
+        padding: 0.4rem 0.6rem !important; /* Slightly reduced */
+    }
+    
+    #star-controls-panel .menu-title {
+        font-size: 0.8rem !important; /* Slightly smaller */
+    }
+    
+    /* Adjust scrollbar margins for mobile (no resize handle) */
+    #star-controls-panel > .star-controls-grid::-webkit-scrollbar-track {
+        margin-bottom: 4px !important; /* Reduced from calc(24px + 4px) */
+    }
+    
     #star-controls-panel .star-controls-grid {
         grid-template-columns: 1fr;
-        gap: 1rem;
-        padding: 1rem;
+        gap: 0.75rem !important; /* Reduced from 1rem */
+    }
+    
+    /* Reduce section spacing */
+    #star-controls-panel .settings-section {
+        margin-bottom: 0.75rem !important; /* Reduced from 1.25rem */
+    }
+    
+    /* Reduce option spacing */
+    #star-controls-panel .settings-option {
+        margin-bottom: 0.75rem !important; /* Reduced from 1.5rem */
+    }
+    
+    /* Smaller section titles */
+    #star-controls-panel .settings-section-title {
+        font-size: 0.85rem !important; /* Reduced from 1rem */
+        margin-bottom: 0.4rem !important; /* Reduced from 0.5rem */
+    }
+    
+    /* Smaller slider labels */
+    #star-controls-panel .slider-label {
+        font-size: 0.7rem !important; /* Reduced from 0.75rem */
+        margin-bottom: 0.4rem !important; /* Reduced from 0.5rem */
+    }
+    
+    /* Smaller slider range info */
+    #star-controls-panel .slider-range-info {
+        font-size: 0.65rem !important; /* Reduced from default */
+        margin-bottom: 0.2rem !important; /* Reduced from 0.25rem */
+        gap: 0.3rem !important; /* Reduced from 0.5rem */
+    }
+    
+    /* Smaller slider current value */
+    #star-controls-panel .slider-current {
+        font-size: 0.75rem !important; /* Slightly smaller */
+    }
+    
+    /* Larger slider thumb for touch */
+    #star-controls-panel .settings-option input[type="range"]::-webkit-slider-thumb {
+        width: 36px !important; /* Increased from 30px */
+        height: 24px !important; /* Increased from 20px */
+    }
+    
+    #star-controls-panel .settings-option input[type="range"]::-moz-range-thumb {
+        width: 36px !important; /* Increased from 30px */
+        height: 24px !important; /* Increased from 20px */
+    }
+    
+    /* Taller slider track for easier touch */
+    #star-controls-panel .settings-option input[type="range"] {
+        height: 8px !important; /* Increased from 6px */
+    }
+    
+    /* Larger select dropdown for touch */
+    #star-controls-panel select {
+        padding: 0.6rem !important; /* Increased from 0.5rem */
+        font-size: 0.8rem !important;
+        min-height: 2.5rem !important; /* Ensure touch-friendly height */
+    }
+    
+    /* Larger buttons for touch */
+    #star-controls-panel button {
+        padding: 0.6rem 0.8rem !important;
+        min-height: 2.5rem !important; /* Ensure touch-friendly height */
+        font-size: 0.75rem !important;
+    }
+    
+    /* Action buttons container spacing */
+    #star-controls-panel .action-buttons-container {
+        gap: 0.5rem !important;
     }
 }
 
@@ -2535,7 +2451,7 @@ input[type="color"]::-moz-color-swatch {
     accent-color: var(--color-blue-500); /* Blue accent to match menu */
 }
 
-#settings-toggle-btn {
+#visibility-toggle-btn {
     position: fixed;
     right: 1rem;
     top: 1rem;
@@ -2552,6 +2468,51 @@ input[type="color"]::-moz-color-swatch {
     font-family: 'Courier New', 'Consolas', monospace;
     z-index: 1001;
     image-rendering: crisp-edges;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    width: auto;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+#visibility-toggle-btn:hover {
+    background: var(--color-midnight-700);
+    box-shadow: 2px 2px 0 var(--color-shadow-2xl);
+}
+
+#visibility-toggle-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: none;
+}
+
+#settings-toggle-btn {
+    position: fixed;
+    right: 1rem;
+    top: 4rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--color-midnight-800);
+    color: var(--color-offwhite-50);
+    border: 2px solid var(--color-midnight-800);
+    border-radius: 0;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'Courier New', 'Consolas', monospace;
+    z-index: 1001;
+    image-rendering: crisp-edges;
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+    width: auto;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
 }
 
 #settings-toggle-btn:hover {
@@ -2567,7 +2528,7 @@ input[type="color"]::-moz-color-swatch {
 #star-controls-toggle-btn {
     position: fixed;
     right: 1rem;
-    top: 4rem;
+    top: 7rem;
     padding: 0.5rem 0.75rem;
     background: var(--color-midnight-800);
     color: var(--color-offwhite-50);
@@ -2608,7 +2569,7 @@ input[type="color"]::-moz-color-swatch {
 #activate-all-stars-ui-btn {
     position: fixed;
     right: 1rem;
-    top: 7rem;
+    top: 10rem;
     padding: 0.5rem 0.75rem;
     background: var(--color-midnight-800);
     color: var(--color-offwhite-50);
@@ -2649,11 +2610,10 @@ input[type="color"]::-moz-color-swatch {
     background: var(--color-blue-400);
 }
 
-/* Randomize Stars Button (UI Overlay) */
 #randomize-stars-ui-btn {
     position: fixed;
     right: 1rem;
-    top: 10rem;
+    top: 13rem;
     padding: 0.5rem 0.75rem;
     background: var(--color-midnight-800);
     color: var(--color-offwhite-50);
@@ -2672,9 +2632,6 @@ input[type="color"]::-moz-color-swatch {
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
 }
 
 #randomize-stars-ui-btn:hover {
@@ -2685,10 +2642,6 @@ input[type="color"]::-moz-color-swatch {
 #randomize-stars-ui-btn:active {
     transform: translate(1px, 1px);
     box-shadow: none;
-}
-
-#randomize-stars-ui-btn svg {
-    flex-shrink: 0;
 }
 
 /* Logo - Rusty Orange Style */

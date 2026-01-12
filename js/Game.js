@@ -8,12 +8,19 @@ import { Project } from './Project.js';
 export class Game {
     constructor() {
         this.world = new World();
-        this.camera = new Camera(window.innerWidth, window.innerHeight);
+        // Get viewport dimensions with fallback
+        const viewportDims = this.getViewportDimensions();
+        const initialWidth = viewportDims.width > 0 ? viewportDims.width : 800;
+        const initialHeight = viewportDims.height > 0 ? viewportDims.height : 600;
+        this.camera = new Camera(initialWidth, initialHeight);
         this.character = new Character(0, 0);
         this.input = new Input(this.world.getCanvas(), this.camera);
         this.guide = new Guide();
 
         this.isRunning = false;
+        
+        // UI visibility state (for eye toggle button)
+        this.uiVisible = true;
 
         // Message queue system - supports multiple stacked messages
         this.messageQueue = [];
@@ -80,6 +87,10 @@ export class Game {
         this.frameInterval = 1000 / this.targetFPS;
         this.lastFrameTime = 0;
 
+        // Viewport tracking for device preview detection
+        this.lastViewportWidth = window.innerWidth;
+        this.lastViewportHeight = window.innerHeight;
+
         // Audio context for tick sounds (lazy initialization)
         this.audioContext = null;
         
@@ -116,6 +127,7 @@ export class Game {
         
         this.setupProjects();
         this.setupUI();
+        this.setupVisibilityToggle();
         this.setupInteraction();
         this.setupSettingsPanel();
         this.setupStarControlsPanel();
@@ -140,15 +152,16 @@ export class Game {
         }
         // Controls is a modal popup, not draggable
 
-        // Spawn character - on mobile, spawn on Experiment Alpha
+        // Spawn character - on smaller screens spawn on Alpha, otherwise between stars
         let spawnX, spawnY;
-        if (this.input.isTouchDevice) {
-            spawnX = -250; // Experiment Alpha x position
-            spawnY = -200; // Experiment Alpha y position
+        if (window.innerWidth <= 768) {
+            // Mobile/small screens: spawn on Experiment Alpha (-200, -150)
+            spawnX = -200;
+            spawnY = -150;
         } else {
-            // Desktop: spawn between the two stars
-            spawnX = (-250 + 400) / 2; // 75
-            spawnY = (-200 + 200) / 2; // 0
+            // Desktop: spawn between Alpha and Beta stars
+            spawnX = 50;
+            spawnY = 0;
         }
         this.character.x = spawnX;
         this.character.y = spawnY;
@@ -159,16 +172,24 @@ export class Game {
         this.camera.x = this.character.x - this.camera.width / 2;
         this.camera.y = this.character.y - this.camera.height / 2;
         
-        // Set default zoom on mobile
-        if (this.input.isTouchDevice) {
-            this.camera.setZoom(0.8);
-            this.camera.zoom = 0.8; // Set immediately, not just target
-        }
+        // Mobile zoom disabled until touch bug is fixed
+    }
+
+    /**
+     * Get viewport dimensions using innerWidth/innerHeight.
+     * These are the most reliable across all browsers and scenarios.
+     */
+    getViewportDimensions() {
+        return {
+            width: Math.max(1, window.innerWidth || 1),
+            height: Math.max(1, window.innerHeight || 1)
+        };
     }
 
     setupProjects() {
-        // Scale star positions for mobile to bring them closer together
-        const positionScale = this.input.isTouchDevice ? 0.5 : 1.0;
+        // CONFIRMED BUG: Position scaling causes the issue
+        // Keep at 1.0 for now - mobile will use same positions as desktop
+        const positionScale = 1.0;
         
         const project1 = new Project(-200 * positionScale, -150 * positionScale, {
             label: 'Experiment Alpha',
@@ -208,6 +229,8 @@ export class Game {
         });
 
         this.world.addProject(project1);
+        
+        // Mobile proximity disabled until touch bug is fixed
         
         // Helper function to generate random value in range
         const randomInRange = (min, max, step = 1) => {
@@ -374,6 +397,36 @@ export class Game {
         });
     }
 
+    setupVisibilityToggle() {
+        const visibilityBtn = document.getElementById('visibility-toggle-btn');
+        if (!visibilityBtn) return;
+        
+        visibilityBtn.addEventListener('click', () => {
+            this.playHapticSound('click');
+            this.uiVisible = !this.uiVisible;
+            this.updateUIVisibility();
+        });
+    }
+    
+    updateUIVisibility() {
+        // Get all buttons except visibility toggle
+        // Note: star controls panel is excluded by not being in #ui-overlay > button selector
+        const allButtons = document.querySelectorAll('#ui-overlay > button:not(#visibility-toggle-btn)');
+        
+        if (this.uiVisible) {
+            // Show UI - remove hidden class from buttons
+            allButtons.forEach(btn => {
+                btn.classList.remove('ui-hidden');
+            });
+        } else {
+            // Hide UI - add hidden class to buttons
+            // Character and nameplates are handled via globalAlpha in render methods
+            allButtons.forEach(btn => {
+                btn.classList.add('ui-hidden');
+            });
+        }
+    }
+
     setupSettingsPanel() {
         const toggleBtn = document.getElementById('settings-toggle-btn');
         const settingsPanel = document.getElementById('settings-panel');
@@ -395,9 +448,34 @@ export class Game {
                 return;
             }
             
+            // Check if star controls panel is open and snapped to left
+            const starControlsPanel = document.getElementById('star-controls-panel');
+            const isStarPanelSnappedLeft = starControlsPanel && 
+                !starControlsPanel.classList.contains('hidden') &&
+                starControlsPanel.classList.contains('sticky-left');
+            
+            if (isStarPanelSnappedLeft) {
+                // Position settings panel to the right of star panel
+                const starPanelRect = starControlsPanel.getBoundingClientRect();
+                const starPanelWidth = starPanelRect.width;
+                const gap = 1rem; // Gap between panels
+                const leftPosition = starPanelWidth + gap;
+                
+                settingsPanel.style.left = `${leftPosition}px`;
+                settingsPanel.style.right = 'auto';
+                settingsPanel.style.top = '50%';
+                settingsPanel.style.bottom = 'auto';
+                settingsPanel.style.transform = 'translateY(-50%)';
+                settingsPanel.style.height = '70vh';
+                settingsPanel.style.maxHeight = '70vh';
+                settingsPanel.style.zIndex = '1003'; // Above star panel (1002)
+                return;
+            }
+            
             // Set default height to 70vh
             settingsPanel.style.height = '70vh';
             settingsPanel.style.maxHeight = '70vh';
+            settingsPanel.style.zIndex = '1002'; // Normal z-index
             
             const gap = 20; // Gap between panel and buttons
             const panelHeight = window.innerHeight * 0.7; // 70vh
@@ -468,6 +546,9 @@ export class Game {
                 settingsPanel.classList.add('hidden');
             }
         });
+        
+        // Store reference for use elsewhere
+        this.positionSettingsPanel = positionSettingsPanel;
         
         // Reposition on window resize
         window.addEventListener('resize', () => {
@@ -680,7 +761,7 @@ export class Game {
             // Add "All Stars" option
             const allOption = document.createElement('option');
             allOption.value = 'all';
-            allOption.textContent = 'All Stars';
+            allOption.textContent = 'All';
             starSelector.appendChild(allOption);
         };
         
@@ -692,13 +773,17 @@ export class Game {
         
         // Position panel sticky to right side of screen
         const positionPanelNearStar = () => {
-            // On mobile, let CSS handle positioning (bottom: 0)
-            if (this.input.isTouchDevice) {
+            // On mobile (screen width <= 768px), always position at bottom, 50vh height
+            if (window.innerWidth <= 768) {
                 // Reset any JavaScript-set positioning to let CSS take over
                 panel.style.top = 'auto';
                 panel.style.bottom = '0';
                 panel.style.left = '0';
                 panel.style.right = '0';
+                panel.style.width = '100vw';
+                panel.style.height = '50vh';
+                panel.style.maxHeight = '50vh';
+                panel.style.maxWidth = '100vw';
                 panel.style.transform = 'none';
                 panel.style.position = 'fixed';
                 return;
@@ -772,47 +857,34 @@ export class Game {
                 // Panel was opened - mark as manually opened
                 this.starControlsManuallyOpened = true;
                 
-                // On mobile, focus camera on nearest star
-                if (this.input.isTouchDevice) {
-                    const projects = this.world.getProjects();
+                // On mobile, center character in top half of screen (panel takes bottom 50vh)
+                if (window.innerWidth <= 768) {
                     const charPos = this.character.getPosition();
-                    let nearestStar = null;
-                    let nearestDistance = Infinity;
+                    // Top half viewport height (50vh = window.innerHeight / 2)
+                    const topHalfHeight = window.innerHeight / 2;
+                    // Center character in top half
+                    const targetX = charPos.x - (this.camera.width / 2) / this.camera.zoom;
+                    const targetY = charPos.y - (topHalfHeight / 2) / this.camera.zoom;
                     
-                    projects.forEach(project => {
-                        const distance = project.distanceTo(charPos.x, charPos.y);
-                        if (distance < nearestDistance) {
-                            nearestDistance = distance;
-                            nearestStar = project;
+                    // Smoothly animate camera
+                    const startX = this.camera.x;
+                    const startY = this.camera.y;
+                    const duration = 500;
+                    const startTime = Date.now();
+                    
+                    const animateCamera = () => {
+                        const elapsed = Date.now() - startTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        const eased = 1 - Math.pow(1 - progress, 3);
+                        
+                        this.camera.x = startX + (targetX - startX) * eased;
+                        this.camera.y = startY + (targetY - startY) * eased;
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animateCamera);
                         }
-                    });
-                    
-                    if (nearestStar) {
-                        // Smoothly move camera to center on nearest star
-                        const targetX = nearestStar.x - (this.camera.width / 2) / this.camera.zoom;
-                        const targetY = nearestStar.y - (this.camera.height / 2) / this.camera.zoom;
-                        
-                        // Animate camera to star position
-                        const startX = this.camera.x;
-                        const startY = this.camera.y;
-                        const duration = 500; // 500ms animation
-                        const startTime = Date.now();
-                        
-                        const animateCamera = () => {
-                            const elapsed = Date.now() - startTime;
-                            const progress = Math.min(elapsed / duration, 1);
-                            // Ease-out cubic
-                            const eased = 1 - Math.pow(1 - progress, 3);
-                            
-                            this.camera.x = startX + (targetX - startX) * eased;
-                            this.camera.y = startY + (targetY - startY) * eased;
-                            
-                            if (progress < 1) {
-                                requestAnimationFrame(animateCamera);
-                            }
-                        };
-                        animateCamera();
-                    }
+                    };
+                    animateCamera();
                 }
                 
                 setTimeout(() => positionPanelNearStar(), 0);
@@ -1279,12 +1351,6 @@ export class Game {
             
             // Set flag to prevent event listeners from firing during programmatic update
             this.updatingControlsFromProject = true;
-            
-            // Don't play haptic sound during initialization (AudioContext requires user gesture)
-            // Only play if audio context is already active (user has interacted)
-            if (this.audioContext && this.audioContext.state === 'running') {
-                this.playHapticSound('select');
-            }
             
             // Update spoke controls
             spokeCountSlider.value = project.spokeCount;
@@ -2646,7 +2712,7 @@ export class Game {
         const activateBtn = document.getElementById('activate-all-stars-btn');
         const activateUiBtn = document.getElementById('activate-all-stars-ui-btn');
         
-        const buttonText = this.allStarsActivated ? 'Deactivate All Stars' : 'Activate All Stars';
+        const buttonText = this.allStarsActivated ? 'Deactivate All' : 'Activate All';
         const buttonClass = this.allStarsActivated ? 'active' : '';
         
         // Update panel button (has SVG icon, so update span text)
@@ -2884,6 +2950,36 @@ export class Game {
                         panel.classList.remove('hidden');
                         this.starControlsManuallyOpened = true;
                         
+                        // On mobile, center character in top half of screen (panel takes bottom 50vh)
+                        if (window.innerWidth <= 768) {
+                            const charPos = this.character.getPosition();
+                            // Top half viewport height (50vh = window.innerHeight / 2)
+                            const topHalfHeight = window.innerHeight / 2;
+                            // Center character in top half
+                            const targetX = charPos.x - (this.camera.width / 2) / this.camera.zoom;
+                            const targetY = charPos.y - (topHalfHeight / 2) / this.camera.zoom;
+                            
+                            // Smoothly animate camera
+                            const startX = this.camera.x;
+                            const startY = this.camera.y;
+                            const duration = 500;
+                            const startTime = Date.now();
+                            
+                            const animateCamera = () => {
+                                const elapsed = Date.now() - startTime;
+                                const progress = Math.min(elapsed / duration, 1);
+                                const eased = 1 - Math.pow(1 - progress, 3);
+                                
+                                this.camera.x = startX + (targetX - startX) * eased;
+                                this.camera.y = startY + (targetY - startY) * eased;
+                                
+                                if (progress < 1) {
+                                    requestAnimationFrame(animateCamera);
+                                }
+                            };
+                            animateCamera();
+                        }
+                        
                         // Position panel on right side
                         if (this.positionStarControlsPanel) {
                             setTimeout(() => this.positionStarControlsPanel(), 0);
@@ -2893,8 +2989,8 @@ export class Game {
                 return;
             }
 
-            // Check if clicked on character - skip on mobile
-            if (this.character.containsPoint(worldPos.x, worldPos.y) && !this.input.isTouchDevice) {
+            // Check if clicked on character - skip on mobile (check screen width since isTouchDevice is disabled)
+            if (this.character.containsPoint(worldPos.x, worldPos.y) && window.innerWidth > 768) {
                 e.preventDefault();
                 this.showMessagePrompt();
             }
@@ -3263,7 +3359,7 @@ export class Game {
             const touch = e.touches[0];
             startDrag(touch.clientX, touch.clientY);
             e.preventDefault(); // Prevent scrolling
-        });
+        }, { passive: false });
 
         const checkCollapse = () => {
             const rect = element.getBoundingClientRect();
@@ -3323,7 +3419,7 @@ export class Game {
                     
                     // Check if near screen edges for sticky snapping
                     const rect = element.getBoundingClientRect();
-                    const edgeThreshold = 50; // pixels from edge
+                    const edgeThreshold = 150; // pixels from edge (increased from 50 to prevent premature snapping)
                     
                     // Check left edge
                     if (rect.left < edgeThreshold) {
@@ -3333,6 +3429,20 @@ export class Game {
                         element.dataset.sticky = 'left';
                         // Update star name display format
                         this.updateStarNameDisplay();
+                        // Reposition settings panel if it's open
+                        const settingsPanel = document.getElementById('settings-panel');
+                        if (settingsPanel && !settingsPanel.classList.contains('hidden')) {
+                            const positionSettingsPanel = () => {
+                                const starPanelRect = element.getBoundingClientRect();
+                                const starPanelWidth = starPanelRect.width;
+                                const gap = 1rem;
+                                const leftPosition = starPanelWidth + gap;
+                                settingsPanel.style.left = `${leftPosition}px`;
+                                settingsPanel.style.right = 'auto';
+                                settingsPanel.style.zIndex = '1003';
+                            };
+                            setTimeout(positionSettingsPanel, 0);
+                        }
                     }
                     // Check right edge
                     else if (rect.right > window.innerWidth - edgeThreshold) {
@@ -3347,6 +3457,11 @@ export class Game {
                     else {
                         element.classList.remove('sticky-left', 'sticky-right');
                         element.dataset.sticky = '';
+                        // Reposition settings panel back to default if it was adjusted
+                        const settingsPanel = document.getElementById('settings-panel');
+                        if (settingsPanel && !settingsPanel.classList.contains('hidden') && this.positionSettingsPanel) {
+                            setTimeout(() => this.positionSettingsPanel(), 0);
+                        }
                         // Remove collapsed class when not snapped (but keep if width < 500)
                         if (rect.width >= 500) {
                             element.classList.remove('collapsed');
@@ -3357,7 +3472,7 @@ export class Game {
                 } else if (element.id === 'settings-panel') {
                     // Check if near screen edges for sticky snapping
                     const rect = element.getBoundingClientRect();
-                    const edgeThreshold = 50; // pixels from edge
+                    const edgeThreshold = 150; // pixels from edge (increased from 50 to prevent premature snapping)
                     
                     // Check left edge
                     if (rect.left < edgeThreshold) {
@@ -3570,15 +3685,13 @@ export class Game {
 
         // Resume audio context if suspended (browser autoplay policy)
         if (this.audioContext.state === 'suspended') {
-            // Try to resume, but don't wait - let it resume on next user interaction
-            this.audioContext.resume().catch(() => {});
-            // Don't proceed if context is still suspended (requires user gesture)
-            return;
-        }
-        
-        // Only play if context is running (user has interacted)
-        if (this.audioContext.state !== 'running') {
-            return;
+            this.audioContext.resume().catch(() => {
+                // Silently fail if resume fails
+            });
+            // Don't proceed if context is still suspended
+            if (this.audioContext.state === 'suspended') {
+                return;
+            }
         }
 
         try {
@@ -3619,17 +3732,13 @@ export class Game {
 
         // Resume audio context if suspended (browser autoplay policy)
         if (this.audioContext.state === 'suspended') {
-            // Try to resume, but don't wait - let it resume on next user interaction
             this.audioContext.resume().catch(() => {
                 // Silently fail if resume fails
             });
-            // Don't proceed if context is still suspended (requires user gesture)
-            return;
-        }
-        
-        // Only play if context is running (user has interacted)
-        if (this.audioContext.state !== 'running') {
-            return;
+            // Don't proceed if context is still suspended
+            if (this.audioContext.state === 'suspended') {
+                return;
+            }
         }
 
         try {
@@ -3695,17 +3804,13 @@ export class Game {
 
         // Resume audio context if suspended (browser autoplay policy)
         if (this.audioContext.state === 'suspended') {
-            // Try to resume, but don't wait - let it resume on next user interaction
             this.audioContext.resume().catch(() => {
                 // Silently fail if resume fails
             });
-            // Don't proceed if context is still suspended (requires user gesture)
-            return;
-        }
-        
-        // Only play if context is running (user has interacted)
-        if (this.audioContext.state !== 'running') {
-            return;
+            // Don't proceed if context is still suspended
+            if (this.audioContext.state === 'suspended') {
+                return;
+            }
         }
 
         try {
@@ -3777,17 +3882,13 @@ export class Game {
 
         // Resume audio context if suspended (browser autoplay policy)
         if (this.audioContext.state === 'suspended') {
-            // Try to resume, but don't wait - let it resume on next user interaction
             this.audioContext.resume().catch(() => {
                 // Silently fail if resume fails
             });
-            // Don't proceed if context is still suspended (requires user gesture)
-            return;
-        }
-        
-        // Only play if context is running (user has interacted)
-        if (this.audioContext.state !== 'running') {
-            return;
+            // Don't proceed if context is still suspended
+            if (this.audioContext.state === 'suspended') {
+                return;
+            }
         }
 
         try {
@@ -3808,7 +3909,7 @@ export class Game {
             // Smooth, elegant envelope: gentle attack and release
             const now = this.audioContext.currentTime;
             const duration = 0.12; // Slightly longer for elegance
-            const gain = 0.15 * this.sfxVolume; // Match volume with other sliders
+            const gain = 0.15 * this.sfxVolume; // Synchronized with other sliders
             
             // Smooth attack and release curves
             gainNode.gain.setValueAtTime(0, now);
@@ -3940,6 +4041,16 @@ export class Game {
     }
 
     update() {
+        // Check for viewport changes (e.g., Chrome device preview activation)
+        const { width: currentWidth, height: currentHeight } = this.getViewportDimensions();
+        if (currentWidth !== this.lastViewportWidth || currentHeight !== this.lastViewportHeight) {
+            // Viewport changed - force resize
+            this.camera.resize(currentWidth, currentHeight);
+            this.world.resize();
+            this.lastViewportWidth = currentWidth;
+            this.lastViewportHeight = currentHeight;
+        }
+
         // Disable movement when typing box is open
         if (!this.activeMenu) {
             // Follow mode - character follows mouse
@@ -4227,33 +4338,44 @@ export class Game {
     }
 
     render() {
+        // Validate canvas has valid dimensions before rendering
+        const canvas = this.world.getCanvas();
+        const { width: currentWidth, height: currentHeight } = this.getViewportDimensions();
+        
+        // Only resize if dimensions are invalid (0) or significantly different (more than 1px)
+        // Avoid resizing on small floating point differences which would clear the canvas
+        if (canvas.width === 0 || canvas.height === 0) {
+            this.world.resize();
+            this.camera.resize(currentWidth, currentHeight);
+            this.lastViewportWidth = currentWidth;
+            this.lastViewportHeight = currentHeight;
+        } else if (Math.abs(canvas.width - currentWidth) > 1 || Math.abs(canvas.height - currentHeight) > 1) {
+            // Significant dimension change - resize but don't skip rendering
+            this.world.resize();
+            this.camera.resize(currentWidth, currentHeight);
+            this.lastViewportWidth = currentWidth;
+            this.lastViewportHeight = currentHeight;
+        }
+
+        // Always render (don't skip frames after resize)
         // Hide nametags on mobile
         const renderNametags = !this.input.isTouchDevice;
         // Pass currentStar to show modify text in nameplate when in boundary
-        this.world.render(this.camera, this.character, this.maxProximityValue, true, true, null, null, renderNametags, this.currentStar);
+        // Pass uiVisible flag for opacity control
+        this.world.render(this.camera, this.character, this.maxProximityValue, true, true, null, null, renderNametags, this.currentStar, this.uiVisible);
         // Render click effects on top
-        const ctx = this.world.getCanvas().getContext('2d');
+        const ctx = canvas.getContext('2d');
         this.renderClickEffects(ctx, this.camera);
     }
 
     gameLoop(timestamp = 0) {
         if (!this.isRunning) return;
 
-        // Initialize lastFrameTime on first call if not set - ensure first frame always renders
-        const isFirstFrame = this.lastFrameTime === 0;
-        if (isFirstFrame) {
-            // Force first frame to render by setting lastFrameTime to a value that ensures deltaTime >= frameInterval
-            this.lastFrameTime = timestamp > 0 ? timestamp - this.frameInterval : 0;
-        }
-
-        const deltaTime = timestamp - this.lastFrameTime;
-        const shouldRender = isFirstFrame || deltaTime >= this.frameInterval;
-        
-        // Only update/render if enough time has passed (frame rate limiting) OR if it's the first frame
-        if (shouldRender) {
+        try {
             this.update();
             this.render();
-            this.lastFrameTime = timestamp > 0 ? timestamp : performance.now();
+        } catch (error) {
+            console.error('Error in game loop:', error);
         }
         
         requestAnimationFrame((ts) => this.gameLoop(ts));
@@ -4261,12 +4383,10 @@ export class Game {
 
     start() {
         this.isRunning = true;
-        this.lastFrameTime = 0; // Will be initialized in gameLoop
         requestAnimationFrame((ts) => this.gameLoop(ts));
         
-        // Wait a bit for character to settle into position, then show welcome message
+        // Show welcome message after character settles
         setTimeout(() => {
-            // Show welcome message
             this.showThoughtBubble("Welcome! I'm The Guide. Click on me to chat.", 5000);
         }, 1500);
     }

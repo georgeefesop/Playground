@@ -13,15 +13,34 @@ export class World {
         // Background settings
         this.currentBackground = 'space';
         this.backgroundImage = null;
+        this.backgroundImageFailed = false;
+        this.backgroundPattern = null; // Cache the pattern to avoid creating it every frame
         this.showGrid = true;
 
         this.resize();
-        window.addEventListener('resize', () => this.resize());
+        window.addEventListener('resize', () => {
+            this.resize();
+        });
+    }
+
+    /**
+     * Get viewport dimensions using innerWidth/innerHeight.
+     * These are the most reliable across all browsers and scenarios.
+     */
+    getViewportDimensions() {
+        return {
+            width: Math.max(1, window.innerWidth || 1),
+            height: Math.max(1, window.innerHeight || 1)
+        };
     }
 
     resize() {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
+        const { width, height } = this.getViewportDimensions();
+        this.canvas.width = width;
+        this.canvas.height = height;
+        // Ensure CSS size matches internal size exactly on mobile
+        this.canvas.style.width = width + 'px';
+        this.canvas.style.height = height + 'px';
     }
 
     drawBackground(camera, dimFactor = 0, targetCtx = null, targetCanvas = null) {
@@ -39,34 +58,26 @@ export class World {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         } else if (this.currentBackground === 'space') {
             // Space background - draw in screen space
-            if (!this.backgroundImage || !this.backgroundImage.complete) {
-                if (!this.backgroundImage) {
-                    this.backgroundImage = new Image();
-                    this.backgroundImage.src = 'assets/space.png';
-                    // Redraw when image loads
-                    this.backgroundImage.onload = () => {
-                        // Trigger a redraw by calling render if game is running
-                        if (window.game && window.game.isRunning) {
-                            window.game.render();
-                        }
-                    };
-                    this.backgroundImage.onerror = () => {
-                        // Image failed to load, will use fallback
-                        console.warn('Background image failed to load:', this.backgroundImage.src);
-                    };
-                }
-                // Fallback while loading
+            if (!this.backgroundImage) {
+                this.backgroundImage = new Image();
+                this.backgroundImage.onerror = () => {
+                    console.warn('Failed to load background image');
+                    this.backgroundImageFailed = true;
+                };
+                this.backgroundImage.src = 'assets/space.png';
+            }
+            
+            if (this.backgroundImageFailed || !this.backgroundImage.complete) {
+                // Fallback while loading or if failed
                 ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
             } else {
-                // Create pattern and fill entire screen
+                // Create pattern and fill
                 const pattern = ctx.createPattern(this.backgroundImage, 'repeat');
                 if (pattern) {
                     ctx.fillStyle = pattern;
-                    // Fill entire canvas with pattern
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 } else {
-                    // Fallback
                     ctx.fillStyle = getCSSVar('--color-space-bg') || '#0a0a0f';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                 }
@@ -105,10 +116,10 @@ export class World {
         this.showGrid = show;
     }
 
-    render(camera, character, dimFactor = 0, renderCharacter = true, renderGrid = true, targetCtx = null, targetCanvas = null, renderNametags = true, showModifyProject = null) {
+    render(camera, character, dimFactor = 0, renderCharacter = true, renderGrid = true, targetCtx = null, targetCanvas = null, renderNametags = true, showModifyProject = null, uiVisible = true) {
         const ctx = targetCtx || this.ctx;
         const canvas = targetCanvas || this.canvas;
-        
+
         // Draw background in screen space (before transform)
         this.drawBackground(camera, dimFactor, targetCtx, targetCanvas);
 
@@ -124,13 +135,22 @@ export class World {
 
         // Draw projects
         this.projects.forEach(project => {
-            const showModify = showModifyProject === project;
-            project.render(ctx, camera, renderNametags, showModify);
+            // Always show modify link on all nametags when nametags are rendered
+            const showModify = renderNametags ? true : (showModifyProject === project);
+            // Pass uiVisible flag - stars remain visible, only nameplates are affected
+            project.render(ctx, camera, renderNametags, showModify, uiVisible);
         });
 
         // Draw character
         if (renderCharacter && character) {
+            // Save current alpha and apply visibility
+            const savedAlpha = ctx.globalAlpha;
+            if (!uiVisible) {
+                ctx.globalAlpha = 0;
+            }
             character.render(ctx, camera);
+            // Restore alpha
+            ctx.globalAlpha = savedAlpha;
         }
         
         ctx.restore();
